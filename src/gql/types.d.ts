@@ -1,3 +1,5 @@
+import React from 'react'
+
 export type UUID = string
 
 export type PaginationData = {
@@ -12,4 +14,10 @@ export type FilterData = {
   minAmount: number
   maxAmount: number
   sortBy: string
+}
+
+export type CategoryType = {
+  type: string
+  count?: number
+  icon: React.ReactElement
 }
