@@ -17,6 +17,7 @@ export type FilterData = {
 }
 
 export type CategoryType = {
+  text: string
   type: string
   count?: number
   icon: React.ReactElement

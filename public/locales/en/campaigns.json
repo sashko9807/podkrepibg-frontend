@@ -190,6 +190,7 @@
     "error": "Error",
     "deleted": "Deleted"
   },
+<<<<<<< HEAD
   "campaignTypesFields": {
     "treatment": "Treatment and rehabilitation",
     "transplatation": "Transplantation",
@@ -210,4 +211,8 @@
     "animals": "Animals",
     "disasters": "Disasters"
   }
+=======
+  "steps": {},
+  "note": {}
+>>>>>>> 6696db77 (wip - fixes on ListIconButton component and translations)
 }
