@@ -34,6 +34,7 @@ const classes = {
   campaignTitle: `${PREFIX}-campaignTitle`,
   linkButton: `${PREFIX}-linkButton`,
   securityIcon: `${PREFIX}-securityIcon`,
+  description: `${PREFIX}-description`
 }
 
 const StyledGrid = styled(Grid)(({ theme }) => ({
@@ -60,12 +61,19 @@ const StyledGrid = styled(Grid)(({ theme }) => ({
     },
   },
 
-  ['& .ql-editor']: {
+  [`& .${classes.description}`]: {
     fontSize: theme.spacing(2),
     fontWeight: 500,
     lineHeight: theme.spacing(4),
     paddingLeft: '0',
     paddingRight: '0',
+
+    ['blockquote'] : {
+    borderLeft: '4px solid #ccc',
+    marginBottom: 5,
+    marginTop: 5,
+    paddingLeft: 16,
+    }
   },
 
   [`& .${classes.linkButton}`]: {
@@ -109,7 +117,11 @@ export default function CampaignDetails({ campaign }: Props) {
       />
       <Grid container spacing={8}>
         <Grid item xs={12}>
-          <ReactQuill readOnly theme="bubble" value={campaign.description} />
+          <Typography
+            component={'section'}
+            className={classes.description}
+            dangerouslySetInnerHTML={{ __html: campaign.description }}
+          />
         </Grid>
         <Grid item xs={12}>
           <CampaignSlider sliderImages={sliderImages} />

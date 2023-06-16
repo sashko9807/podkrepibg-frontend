@@ -2290,6 +2290,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tinymce/tinymce-react@npm:^4.3.0":
+  version: 4.3.0
+  resolution: "@tinymce/tinymce-react@npm:4.3.0"
+  dependencies:
+    prop-types: ^15.6.2
+    tinymce: ^6.3.1
+  peerDependencies:
+    react: ^18.0.0 || ^17.0.1 || ^16.7.0
+    react-dom: ^18.0.0 || ^17.0.1 || ^16.7.0
+  checksum: 73b3765ae9bacc58df760c1bb8968fc6c8dd498373a8f99f782292f0c3bbc4c1ff71d6aaa1d8ac66349a79ebfc6091698c2891532c3efd8f795399b59bb427b8
+  languageName: node
+  linkType: hard
+
 "@tootallnate/once@npm:1":
   version: 1.1.2
   resolution: "@tootallnate/once@npm:1.1.2"
@@ -8713,6 +8726,7 @@ __metadata:
     "@tanstack/react-query": ^4.16.1
     "@testing-library/jest-dom": ^5.16.5
     "@testing-library/react": ^13.4.0
+    "@tinymce/tinymce-react": ^4.3.0
     "@tryghost/content-api": ^1.11.4
     "@types/cookie": ^0.4.1
     "@types/lodash.truncate": ^4.4.7
@@ -8770,6 +8784,7 @@ __metadata:
     stripe: ^8.184.0
     stylelint: ^14.5.0
     stylelint-config-sass-guidelines: 9.0.1
+    tinymce: ^6.5.0
     typescript: 4.8.3
     yup: 0.32.9
   languageName: unknown
@@ -10663,6 +10678,13 @@ __metadata:
   version: 1.0.3
   resolution: "tiny-warning@npm:1.0.3"
   checksum: da62c4acac565902f0624b123eed6dd3509bc9a8d30c06e017104bedcf5d35810da8ff72864400ad19c5c7806fc0a8323c68baf3e326af7cb7d969f846100d71
+  languageName: node
+  linkType: hard
+
+"tinymce@npm:^6.3.1, tinymce@npm:^6.5.0":
+  version: 6.5.0
+  resolution: "tinymce@npm:6.5.0"
+  checksum: b27c95eac8f8b15dc3c25cf865f32212afd98dec7c3b064433c397dd571ded3e13eb0a8451477829025c115fa7003c93937406fdf6ce842bad1109c5dc382d62
   languageName: node
   linkType: hard
 

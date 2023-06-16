@@ -28,7 +28,8 @@ export const endpoints = {
     deleteCampaign: (id: string) => <Endpoint>{ url: `/campaign/${id}`, method: 'DELETE' },
     uploadFile: (campaignId: string) =>
       <Endpoint>{ url: `/campaign-file/${campaignId}`, method: 'POST' },
-    downloadFile: (fileId: string) => <Endpoint>{ url: `/campaign-file/${fileId}`, method: 'GET' },
+    imageUpload:  <Endpoint>{url: `/campaign-file/image-upload`, method: 'POST'},
+    downloadFile: (fileId: string) => <Endpoint>{ url: `/campaign-file/${fileId}/attach`, method: 'GET' },
     deleteFile: (fileId: string) => <Endpoint>{ url: `/campaign-file/${fileId}`, method: 'DELETE' },
     getDonations: (id: string) => <Endpoint>{ url: `/campaign/donations/${id}`, method: 'GET' },
     listCampaignExpenses: (slug: string) =>
