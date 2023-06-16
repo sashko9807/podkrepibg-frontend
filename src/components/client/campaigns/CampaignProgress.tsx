@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react'
 import { styled } from '@mui/material/styles'
 import LinearProgress from '@mui/material/LinearProgress'
-import { Grid } from '@mui/material'
+import { Grid, Typography } from '@mui/material'
 import { UUID } from 'gql/types'
+import { moneyPublic } from 'common/util/money'
 
 const PREFIX = 'CampaignProgress'
 
@@ -18,12 +19,15 @@ const StyledGrid = styled(Grid)(({ theme }) => ({
     width: '100%',
     '> div p': {
       color: theme.palette.text.secondary,
-      padding: theme.spacing(1),
     },
   },
 
   [`& .${classes.cardActions}`]: {
     padding: '0',
+  },
+  [`& .${classes.root}`]: {
+    height: theme.spacing(2),
+    borderRadius: 10
   },
 }))
 
@@ -31,14 +35,23 @@ const BorderLinearProgress = LinearProgress
 
 type Props = {
   campaignId: UUID
+  isSuccess: boolean,
   raised: number
   target: number
 }
-export default function CampaignProgress({ campaignId, raised, target }: Props) {
+export default function CampaignProgress({ campaignId, isSuccess, raised, target }: Props) {
   const percentage = useMemo(() => (raised / target) * 100, [raised, target])
   return (
     <StyledGrid className={classes.donationProgress} container>
-      <Grid item xs={12}>
+      <Grid container item xs={12}>
+        <Grid container item flexDirection={'row'} justifyContent={'space-between'}>
+        <Typography component={'div'}>Събрани: {moneyPublic(raised, 'BGN')}</Typography>
+        {
+          !isSuccess ? <Typography>ЦЕЛ: {moneyPublic(target, 'BGN')}</Typography>  : <Typography>Успешна</Typography>     
+        }
+        </Grid>
+        <Grid item xs={12}>
+
         <BorderLinearProgress
           variant="determinate"
           value={percentage > 100 ? 100 : percentage}
@@ -48,6 +61,7 @@ export default function CampaignProgress({ campaignId, raised, target }: Props) 
             bar: classes.bar,
           }}
         />
+        </Grid>
       </Grid>
       {/* <Grid item xs={6}>
         <Typography gutterBottom color="primary" variant="body1" align="left">
