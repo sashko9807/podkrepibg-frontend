@@ -1,103 +1,70 @@
-import { Favorite } from '@mui/icons-material'
-import KeyboardDoubleArrowRightIcon from '@mui/icons-material/KeyboardDoubleArrowRight'
-import {
-  Box,
-  Card,
-  CardActionArea,
-  CardActions,
-  CardContent,
-  CardMedia,
-  Grid,
-  Typography,
-} from '@mui/material'
+import { Card, CardActionArea, CardMedia, Grid, Typography, CardContent } from '@mui/material'
+import { grey } from '@mui/material/colors'
+
 import { styled } from '@mui/material/styles'
+
 import { routes } from 'common/routes'
+
+import Link from 'next/link'
+import Image from 'next/image'
+import { useTranslation } from 'react-i18next'
+import LinkButton from 'components/common/LinkButton'
+import CampaignProgress from './CampaignProgress'
+import { CampaignResponse } from 'gql/campaigns'
 import { campaignListPictureUrl } from 'common/util/campaignImageUrls'
 import { moneyPublic } from 'common/util/money'
-import LinkButton from 'components/common/LinkButton'
-import { CampaignResponse } from 'gql/campaigns'
-import { useTranslation } from 'next-i18next'
-import Image from 'next/image'
-import Link from 'next/link'
-import CampaignProgress from './CampaignProgress'
-import SuccessfullCampaignTag from './SuccessfullCampaignTag'
+import { useMemo } from 'react'
 import { CampaignState } from './helpers/campaign.enums'
+import SuccessfullCampaignTag from './SuccessfullCampaignTag'
 
 const PREFIX = 'CampaignCard'
 
 const classes = {
-  media: `${PREFIX}-media`,
-  cardActions: `${PREFIX}-cardActions`,
   cardWrapper: `${PREFIX}-cardWrapper`,
-  campaignTitle: `${PREFIX}-campaignTitle`,
-  progressBar: `${PREFIX}-progressBar`,
+  cardActionArea: `${PREFIX}-cardActionArea`,
+  media: `${PREFIX}-media`,
   cardContent: `${PREFIX}-cardContent`,
-  seeMoreButton: `${PREFIX}-seeMoreButton`,
+  campaignTitle: `${PREFIX}-campaignTitle`,
+  publishedDate: `${PREFIX}-publishedDate`,
   supportNowButton: `${PREFIX}-supportNowButton`,
 }
 
-const StyledCard = styled(Card)(({ theme }) => ({
+const StyledCard = styled(Card)(() => ({
   [`&.${classes.cardWrapper}`]: {
+    boxShadow: 'none',
     position: 'relative',
-    minHeight: theme.spacing(81),
-    backgroundColor: theme.palette.secondary.light,
-    border: 'none',
-    borderRadius: 0,
-
-    '@media(min-width: 325px)': {
-      minHeight: theme.spacing(79),
-    },
-
-    [theme.breakpoints.up('md')]: {
-      minHeight: theme.spacing(87),
-    },
   },
 
-  [`& .${classes.media}`]: {
-    backgroundSize: 'contain',
-    height: 200,
-    transition: 'filter 0.3s, opacity 0.8s',
-  },
-
-  [`& .${classes.cardActions}`]: {
-    padding: '0',
-  },
-
-  [`& .${classes.campaignTitle}`]: {
-    fontWeight: '500',
-    textAlign: 'left',
-  },
-
-  [`& .${classes.progressBar}`]: {
-    margin: theme.spacing(2.5),
-    textAlign: 'left',
-    minHeight: theme.spacing(5),
-  },
-
-  [`& .${classes.cardContent}`]: {
-    minHeight: theme.spacing(32),
-    maxHeight: theme.spacing(32),
-    [theme.breakpoints.down('md')]: {
-      minHeight: theme.spacing(25),
-      maxHeight: theme.spacing(25),
-    },
-    [theme.breakpoints.down('sm')]: {
-      maxHeight: 'fit-content',
+  [`& .${classes.cardActionArea}`]: {
+    '.MuiCardActionArea-focusHighlight': {
+      backgroundColor: 'transparent',
     },
   },
 
   [`& .${classes.supportNowButton}`]: {
-    fontWeight: 'bold',
+    position: 'absolute',
+    zIndex: 1,
+    right: 10,
+    bottom: 10,
   },
-
-  [`& .${classes.seeMoreButton}`]: {
-    background: 'transparent',
-    color: theme.palette.common.black,
-    fontWeight: 'bold',
-
-    '&:hover': {
-      color: theme.palette.primary.main,
-    },
+  [`& .${classes.media}`]: {
+    width: '100%',
+    overflow: 'hidden',
+  },
+  [`& .${classes.cardContent}`]: {
+    marginTop: 10,
+    padding: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+  },
+  [`& .${classes.campaignTitle}`]: {
+    fontSize: 16,
+    fontWeight: 500,
+  },
+  [`& .${classes.campaignTitle}`]: {
+    fontSize: 14,
+    color: grey[600],
   },
 }))
 
@@ -115,75 +82,63 @@ export default function CampaignCard({ campaign, index }: Props) {
     allowDonationOnComplete,
     slug,
     title,
-    essence,
   } = campaign
 
   const pictureUrl = campaignListPictureUrl(campaign)
   const reached = summary ? summary.reachedAmount : 0
+  const percentage = useMemo(() => Math.ceil((reached / target) * 100), [target, reached])
 
   return (
-    <StyledCard variant="outlined" className={classes.cardWrapper}>
+    <StyledCard className={classes.cardWrapper}>
+      <CardMedia className={classes.media}>
+        <div style={{ position: 'relative', aspectRatio: 4 / 3 }}>
+          <Link href={routes.campaigns.viewCampaignBySlug(slug)} passHref>
+            <Image alt={'title'} src={pictureUrl} fill />
+          </Link>
+          {(campaignState !== CampaignState.complete || allowDonationOnComplete) && (
+            <LinkButton
+              href={routes.campaigns.oneTimeDonation(slug)}
+              variant="contained"
+              color="secondary"
+              className={classes.supportNowButton}>
+              {t('campaigns:cta.support')}
+            </LinkButton>
+          )}
+          {campaignState === CampaignState.complete && <SuccessfullCampaignTag />}
+        </div>
+      </CardMedia>
       <CardActionArea
         LinkComponent={Link}
         href={routes.campaigns.viewCampaignBySlug(slug)}
-        data-testid={`campaign-card-${index}`}>
-        <CardMedia className={classes.media} title={title}>
-          <div
-            style={{ position: 'relative', width: '100%', minHeight: '100%', maxHeight: '100%' }}>
-            <Image alt={title} src={pictureUrl} fill style={{ objectFit: 'contain' }} />
-            {campaignState === CampaignState.complete ? <SuccessfullCampaignTag /> : ''}
-          </div>
-        </CardMedia>
+        data-testid={`campaign-card-${index}`}
+        className={classes.cardActionArea}>
         <CardContent className={classes.cardContent}>
-          <Typography gutterBottom variant="h5" className={classes.campaignTitle}>
-            {title}
-          </Typography>
-          <Typography textAlign={'left'} variant="body2" color="textSecondary" component="p">
-            {essence}
-          </Typography>
+          <Grid container gap={1}>
+            <Grid container item justifyContent={'space-between'}>
+              <Grid item>
+                <Typography fontSize={14} fontWeight={600}>
+                  {`${t('campaigns:campaign.reached')} ${moneyPublic(reached, currency)} `}
+                </Typography>
+                <Typography fontSize={14} fontWeight={400} fontStyle={'italic'} textAlign={'left'}>
+                  {` ${t('или')} ${percentage}%`}
+                </Typography>
+              </Grid>
+              <Grid item sx={{ px: 1 }}>
+                <Typography fontSize={14} fontWeight={600} textAlign={'right'}>{`${t(
+                  'campaigns:of',
+                )} ${moneyPublic(target, currency)}`}</Typography>
+                <Typography fontSize={14} fontWeight={400} fontStyle={'italic'} textAlign={'right'}>
+                  {t('campaigns:campaign.of-goal')}
+                </Typography>
+              </Grid>
+              <CampaignProgress campaignId={id} raised={reached} target={target} />
+            </Grid>
+            <Typography gutterBottom variant="h5" className={classes.campaignTitle}>
+              {title}
+            </Typography>
+          </Grid>
         </CardContent>
       </CardActionArea>
-      <CardActions className={classes.cardActions}>
-        <Grid container justifyContent="space-around">
-          <Box p={2} width={1}>
-            <CampaignProgress campaignId={id} raised={reached} target={target} />
-          </Box>
-          <Typography
-            id={`campaign-${id}--donations-progressbar`}
-            variant="body1"
-            component="p"
-            className={classes.progressBar}>
-            {t('campaigns:campaign.reached')}{' '}
-            <b>
-              {moneyPublic(reached, currency)}
-              {' / '}
-            </b>
-            {t('campaigns:campaign.target')} <b>{moneyPublic(target, currency)}</b>
-          </Typography>
-          <Grid item xs={12}>
-            <Box mx={2} mb={2}>
-              <LinkButton
-                fullWidth
-                href={routes.campaigns.oneTimeDonation(slug)}
-                disabled={campaignState === CampaignState.complete && !allowDonationOnComplete}
-                variant="contained"
-                color="secondary"
-                endIcon={<Favorite color="error" />}
-                className={classes.supportNowButton}>
-                {t('campaigns:cta.support-now')}
-              </LinkButton>
-            </Box>
-            <Box mt={3} textAlign="center">
-              <LinkButton
-                href={routes.campaigns.viewCampaignBySlug(slug)}
-                endIcon={<KeyboardDoubleArrowRightIcon />}
-                className={classes.seeMoreButton}>
-                {t('campaigns:cta.see-more')}
-              </LinkButton>
-            </Box>
-          </Grid>
-        </Grid>
-      </CardActions>
     </StyledCard>
   )
 }

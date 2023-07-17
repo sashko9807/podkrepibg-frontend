@@ -12,7 +12,7 @@ export default function SuccessfullCampaignTag() {
       sx={{
         position: 'absolute',
         right: 15,
-        bottom: 10,
+        bottom: 30,
         zIndex: 20,
         transform: 'rotate(335deg)',
         opacity: 0.8,

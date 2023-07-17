@@ -13,15 +13,15 @@ export class CampaignsPage extends HomePage {
   private readonly donationSupportButton = this.donationGrid + ' a button'
   private readonly filterButtonsCommonSelector = 'ul button.CampaignFilter-filterButtons'
   // private readonly campaignContainerItem = ".MuiGrid-container .MuiGrid-item";
-  private readonly cardActions = '.MuiCardActions-root'
+  private readonly cardActions = '.MuiCardMedia-root'
   private readonly cardActionButtons = this.cardActions + ' button'
   // Main headings
   private readonly bgMainCampaignsHeading = bgLocalizationCampaigns.campaigns
   private readonly enMainCampaignsHeading = enLocalizationCampaigns.campaigns
   private readonly bgSupportCauseTodayHeading = bgLocalizationCampaigns.cta['support-cause-today']
   private readonly enSupportCauseTodayHeading = enLocalizationCampaigns.cta['support-cause-today']
-  private readonly bgSupportNowActionButtonText = bgLocalizationCampaigns.cta['support-now']
-  private readonly enSupportNowActionButtonText = enLocalizationCampaigns.cta['support-now']
+  private readonly bgSupportNowActionButtonText = bgLocalizationCampaigns.cta['support']
+  private readonly enSupportNowActionButtonText = enLocalizationCampaigns.cta['support']
 
   async checkPageUrlByRegExp(urlRegExpAsString?: string, timeoutParam = 10000): Promise<void> {
     await this.page.waitForTimeout(1000)

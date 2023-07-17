@@ -24,6 +24,16 @@ const StyledGrid = styled(Grid)(({ theme }) => ({
     },
   },
 
+  [`& .${classes.root}`]: {
+    height: theme.spacing(1.5),
+    borderRadius: 10,
+  },
+
+  [`& .${classes.bar}`]: {
+    height: theme.spacing(1.5),
+    borderRadius: 10,
+  },
+
   [`& .${classes.cardActions}`]: {
     padding: '0',
   },
@@ -49,6 +59,9 @@ export default function CampaignProgress({ campaignId, raised, target }: Props) 
           classes={{
             root: classes.root,
             bar: classes.bar,
+          }}
+          sx={{
+            '.MuiLinearProgress-bar': { background: percentage > 100 ? '#62DE88' : 'primary' },
           }}
         />
       </Grid>
