@@ -12,10 +12,11 @@ import {
   CheckoutSessionResponse,
   DonationResponse,
   DonorsCountResult,
+  OneTimeDonation,
   TotalDonatedMoneyResponse,
   UserDonationResult,
 } from 'gql/donations'
-import { createCheckoutSession } from 'service/donation'
+import { createCheckoutSession, useCreateUserDonation } from 'service/donation'
 import { CampaignDonationHistoryResponse } from 'gql/campaigns'
 import { FilterData, PaginationData } from 'gql/types'
 
@@ -37,6 +38,20 @@ export function useDonationSession() {
     },
     retryDelay: 1000,
   })
+  return mutation
+}
+
+export function useCreateDonationFromSession() {
+  const {t} = useTranslation()
+  const mutation = useMutation<
+  AxiosResponse<DonationResponse>, 
+  AxiosError<ApiErrors>, 
+  CheckoutSessionInput>({
+    mutationFn: useCreateUserDonation(),
+    onError: () => AlertStore.show(t('common:alerts.error'), 'error'),
+    onSuccess: () => AlertStore.show(t('common:alerts.message-sent'), 'success'),
+  })
+
   return mutation
 }
 

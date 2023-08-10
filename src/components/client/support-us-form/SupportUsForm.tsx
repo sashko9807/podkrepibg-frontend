@@ -7,7 +7,11 @@ import theme from 'common/theme'
 import { CopyTextButton } from 'components/common/CopyTextButton'
 import { ibanNumber, BIC } from 'common/iban'
 
-export default function SupportUsForm() {
+type Props = {
+  paymentReference? :string
+}
+
+export default function SupportUsForm({paymentReference=''}:Props) {
   const { t } = useTranslation('one-time-donation')
 
   const bankAccountInfo = {
@@ -17,14 +21,16 @@ export default function SupportUsForm() {
     bankValue: t('third-step.bank_value'),
     bic: BIC,
     iban: ibanNumber,
-    paymentReference: t('support_us:support-us-reference'),
+    paymentReference: paymentReference || t('support_us:support-us-reference'),
   }
 
   return (
     <List component="div" disablePadding>
+      {!paymentReference &&      
       <Typography variant="body1" marginBottom={theme.spacing(1)}>
         {t('support_us:support-info')}
       </Typography>
+      }
       <Typography variant="h6">{t('third-step.bank-details')}</Typography>
       <Divider />
       <Grid container alignItems="center">

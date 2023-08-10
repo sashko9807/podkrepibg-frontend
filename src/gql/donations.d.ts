@@ -13,7 +13,9 @@ export type CheckoutSessionResponse = {
 
 export type CheckoutSessionInput = {
   mode: Stripe.Checkout.Session.Mode
+  type?: string
   amount?: number
+  provider? :string
   campaignId: string
   personId: string
   successUrl?: string
@@ -38,8 +40,9 @@ export type DonationResponse = {
   createdAt: DateTime
   updatedAt: DateTime
   currency: Currency
-  amount: number
-  personId?: UUID
+  amount: number,
+  personId?: UUID,
+  paymentReference: string,
   person?: {
     id: string
     firstName: string

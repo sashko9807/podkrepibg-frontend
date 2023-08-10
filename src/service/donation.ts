@@ -9,6 +9,7 @@ import {
   DonationBankInput,
   DonationInput,
   DonationResponse,
+  OneTimeDonation,
   UserDonationInput,
 } from 'gql/donations'
 import { apiClient } from 'service/apiClient'
@@ -43,6 +44,15 @@ export function useCreateDonation() {
       endpoints.donation.createDonation.url,
       data,
       authConfig(session?.accessToken),
+    )
+  }
+}
+
+export function useCreateUserDonation() {
+  return async (data: CheckoutSessionInput) => {
+    return await apiClient.post<DonationResponse, AxiosResponse<DonationResponse>>(
+      endpoints.donation.createUserDonation.url,
+      data,
     )
   }
 }

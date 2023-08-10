@@ -3,16 +3,16 @@ import { useTranslation } from 'next-i18next'
 import { useRouter } from 'next/router'
 import { useSession } from 'next-auth/react'
 import { CircularProgress } from '@mui/material'
-import { AxiosError } from 'axios'
+import { AxiosError, AxiosResponse } from 'axios'
 import { FormikHelpers } from 'formik'
 
 import { CardRegion, PaymentProvider } from 'gql/donations.enums'
-import { OneTimeDonation, DonationStep as StepType } from 'gql/donations'
+import { DonationInput, DonationResponse, OneTimeDonation, DonationStep as StepType } from 'gql/donations'
 import { createDonationWish } from 'service/donationWish'
 import { ApiErrors, isAxiosError, matchValidator } from 'service/apiErrors'
 import { useCurrentPerson } from 'common/util/useCurrentPerson'
 import CenteredSpinner from 'components/common/CenteredSpinner'
-import { useDonationSession } from 'common/hooks/donation'
+import { useCreateDonationFromSession, useDonationSession } from 'common/hooks/donation'
 import { useViewCampaign } from 'common/hooks/campaigns'
 import { baseUrl, routes } from 'common/routes'
 
@@ -25,6 +25,8 @@ import { FormikStep, FormikStepper } from './FormikStepper'
 import { validateFirst, validateSecond, validateThird } from './helpers/validation-schema'
 import { StepsContext } from './helpers/stepperContext'
 import { useDonationStepSession } from './helpers/donateSession'
+import { useCreateBankDonation, useCreateDonation } from 'service/donation'
+import { useMutation } from '@tanstack/react-query'
 
 const initialValues: OneTimeDonation = {
   message: '',
@@ -61,12 +63,14 @@ export default function DonationStepper({ onStepChange }: DonationStepperProps) 
   const mutation = useDonationSession()
   const { data: session } = useSession()
   const { data: { user: person } = { user: null } } = useCurrentPerson()
+  const bankMutation = useCreateDonationFromSession()
   const [donateSession, { updateDonationSession, clearDonationSession }] =
     useDonationStepSession(slug)
   if (isLoading || !data) return <CenteredSpinner size="2rem" />
   const { campaign } = data
 
   initialValues.isRecurring = false
+
 
   const userEmail = session?.user?.email
   const donate = React.useCallback(
@@ -90,7 +94,7 @@ export default function DonationStepper({ onStepChange }: DonationStepperProps) 
         message: values?.message,
       })
       if (values?.payment === PaymentProvider.bank) {
-        // Do not redirect for bank payments
+
         return
       }
       if (data.session.url) {
@@ -101,20 +105,39 @@ export default function DonationStepper({ onStepChange }: DonationStepperProps) 
     [mutation],
   )
 
+  const initialBankDonation = React.useCallback(
+    async (values?: OneTimeDonation) => {
+     const {data} = await bankMutation.mutateAsync({
+        mode: 'payment',
+        type: 'donation',
+        provider: values?.payment,
+        campaignId: campaign.id,
+        personId: person ? person?.id : '',
+        personEmail: values?.personsEmail ? values.personsEmail : userEmail,
+        isAnonymous: values?.isAnonymous !== undefined ? values.isAnonymous : true,
+        phone: values?.personsPhone ? values.personsPhone : null,
+      })
+  
+        window.location.href =`${baseUrl}/${i18n.language}/${routes.campaigns.oneTimeDonation(campaign.slug)}/payment-details?paymentId=${data.extPaymentIntentId}&code=${data.paymentReference}`
+        return data
+
+    }, [bankMutation]
+  )
   const onSubmit = async (
     values: OneTimeDonation,
     { setFieldError, resetForm }: FormikHelpers<OneTimeDonation>,
   ) => {
     try {
       if (values?.payment === PaymentProvider.bank) {
+        const donation = await initialBankDonation(values)
         if (values?.message) {
           await createDonationWish({
             message: values.message,
             campaignId: campaign.id,
+            donationId: donation?.id,
             personId: !values.isAnonymous && person?.id ? person.id : null,
           })
         }
-        router.push(`${baseUrl}${routes.campaigns.oneTimeDonation(campaign.slug)}?success=true`)
         return
       }
 

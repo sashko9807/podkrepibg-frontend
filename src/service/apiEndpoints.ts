@@ -80,6 +80,7 @@ export const endpoints = {
     createCheckoutSession: <Endpoint>{ url: '/donation/create-checkout-session', method: 'POST' },
     createPaymentIntent: <Endpoint>{ url: '/donation/create-payment-intent', method: 'POST' },
     createDonation: <Endpoint>{ url: '/donation/create-payment', method: 'POST' },
+    createUserDonation: <Endpoint>{url: '/donation/create-donation-from-session', method:'POST'},
     createBankDonation: <Endpoint>{ url: '/donation/create-bank-payment', method: 'POST' },
     getDonation: (id: string) => <Endpoint>{ url: `/donation/${id}`, method: 'GET' },
     donationsList: (
