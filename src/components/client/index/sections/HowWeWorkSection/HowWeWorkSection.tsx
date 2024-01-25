@@ -15,8 +15,8 @@ export default function HowWeWorkSection() {
   const desktopInfographicPath = `/infographic-${i18n?.language}.svg`
 
   return (
-    <Root>
-      <Heading variant="h4" px={3}>
+    <Root aria-label="How does Pordkprepi.bg work">
+      <Heading variant="h4" px={3} component={'h1'}>
         {t('how-we-work.heading')}
       </Heading>
       <InfoText maxWidth="lg" px={3}>
@@ -29,12 +29,7 @@ export default function HowWeWorkSection() {
         </Hidden>
         <Hidden mdDown>
           {/* A11Y TODO: Render the svg without an <Image /> so screenreaders can read it out */}
-          <Image
-            alt="Podkrepi infographic"
-            src={desktopInfographicPath}
-            width={900}
-            height={1000}
-          />
+          <Image alt="How we work" src={desktopInfographicPath} width={900} height={1000} />
         </Hidden>
       </Grid>
     </Root>

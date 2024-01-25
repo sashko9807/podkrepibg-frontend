@@ -52,8 +52,14 @@ export default function DonationMenuMobile() {
         {t('nav.campaigns.index')}
       </AccordionSummary>
       <AccordionDetails>
-        {navItems.map(({ href, label }, key) => (
-          <LinkButton key={key} fullWidth variant="text" href={href} className={classes.menuItem}>
+        {navItems.map(({ href, label, prefetch }, key) => (
+          <LinkButton
+            key={key}
+            fullWidth
+            variant="text"
+            prefetch={prefetch}
+            href={href}
+            className={classes.menuItem}>
             {t(label)}
           </LinkButton>
         ))}

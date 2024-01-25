@@ -6,7 +6,11 @@ type Props = PropsWithChildren<TypographyProps>
 
 const ContentTypography = ({ children, ...props }: Props) => {
   return (
-    <Typography sx={{ color: theme.palette.text.secondary }} variant="subtitle1" {...props}>
+    <Typography
+      sx={{ color: theme.palette.text.secondary }}
+      variant="subtitle1"
+      component={'h3'}
+      {...props}>
       {children}
     </Typography>
   )

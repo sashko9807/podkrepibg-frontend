@@ -1,6 +1,6 @@
 import { useSession } from 'next-auth/react'
 import { QueryClient, QueryFunction, useQuery } from '@tanstack/react-query'
-import { shuffle } from 'lodash'
+import shuffle from 'lodash/shuffle'
 import { endpoints } from 'service/apiEndpoints'
 import { authQueryFnFactory } from 'service/restRequests'
 import {
@@ -17,36 +17,59 @@ import { DonationStatus } from 'gql/donations.enums'
 import { apiClient } from 'service/apiClient'
 import { useCurrentPerson } from 'common/util/useCurrentPerson'
 import { isAdmin } from 'common/util/roles'
-import { AxiosError } from 'axios'
+import type { AxiosError } from 'axios'
 import { StatisticsGroupBy } from 'components/client/campaigns/helpers/campaign.enums'
 
 // NOTE: shuffling the campaigns so that each gets its fair chance to be on top row
-export const campaignsOrderQueryFunction: QueryFunction<CampaignResponse[]> = async ({
-  queryKey,
-}) => {
+
+export type TCampaignList = {
+  activeCampaigns: CampaignResponse[]
+  completedCampaigns: CampaignResponse[]
+}
+export const campaignListQueryFn: QueryFunction<CampaignResponse[]> = async ({ queryKey }) => {
   const response = await apiClient.get(queryKey.join('/'))
   // Put the campaigns in 2 arrays, one for active and one for inactive
-  const activeCampaigns: CampaignResponse[] = []
-  const inactiveCampaigns: CampaignResponse[] = []
-  response.data.forEach((campaign: CampaignResponse) => {
-    if (campaign.state === 'active') {
-      activeCampaigns.push(campaign)
-    } else {
-      inactiveCampaigns.push(campaign)
-    }
-  })
+  return response.data
+}
+
+export const campaignListReOrderedQueryFn: QueryFunction<TCampaignList> = async ({ queryKey }) => {
+  const response = await apiClient.get(queryKey[0] as string)
+
+  // Put the campaigns in 2 arrays, one for active and one for inactive
+  const activeCampaigns: CampaignResponse[] = response.data.filter(
+    (campaign: CampaignResponse) => campaign.state === 'active',
+  )
+  const inactiveCampaigns: CampaignResponse[] = response.data.filter(
+    (campaign: CampaignResponse) => campaign.state === 'complete',
+  )
   // Shuffle the active campaigns
   const shuffledActiveCampaigns = shuffle(activeCampaigns)
   // Shuffle the inactive campaigns
   const shuffledInactiveCampaigns = shuffle(inactiveCampaigns)
-  // Concatenate the two arrays
-  return shuffledActiveCampaigns.concat(shuffledInactiveCampaigns)
+
+  return { activeCampaigns: shuffledActiveCampaigns, completedCampaigns: shuffledInactiveCampaigns }
 }
 
+/**
+ * List of query keys for pages calling useCampaignListReOrdered()
+ * Needed for preventing DOM changes on route change
+ */
+const queryKeys = {
+  index: 'indexPage',
+  campaign: 'campaignPage',
+} as const
+
+type TQueryKeys = typeof queryKeys[keyof typeof queryKeys]
+
 export function useCampaignList(prefetched = false) {
-  return useQuery<CampaignResponse[]>(
-    [endpoints.campaign.listCampaigns.url],
-    campaignsOrderQueryFunction,
+  return useQuery<CampaignResponse[]>([endpoints.campaign.listCampaigns.url], campaignListQueryFn, {
+    enabled: !prefetched,
+  })
+}
+export function useCampaignListReOrdered(prefetched = false, queryKey: TQueryKeys) {
+  return useQuery<TCampaignList>(
+    [endpoints.campaign.listCampaigns.url, queryKey],
+    campaignListReOrderedQueryFn,
     { enabled: !prefetched },
   )
 }

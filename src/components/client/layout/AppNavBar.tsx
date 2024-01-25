@@ -55,11 +55,12 @@ export default function AppNavBar({ navMenuToggle }: AppBarDeckProps) {
           justifyContent: 'space-between',
           padding: 0,
         }}>
-        <Link href={routes.index} passHref>
+        <Link href={routes.index} passHref aria-label={'Main page'}>
           <ButtonBase
             className={clsx({ shrink })}
             aria-label={t('meta.title')}
             sx={(theme) => ({
+              position: 'relative',
               transition: 'height .5s',
               height: theme.spacing(7.5),
               minWidth: theme.spacing(15),
@@ -103,11 +104,7 @@ export default function AppNavBar({ navMenuToggle }: AppBarDeckProps) {
           </Grid>
         </Grid>
         <Grid sx={{ display: { xs: 'flex', md: 'none' } }}>
-          <IconButton
-            size="small"
-            edge="end"
-            onClick={navMenuToggle}
-            aria-labelledby="navigation menu">
+          <IconButton size="small" edge="end" onClick={navMenuToggle} aria-label="navigation-menu">
             <Menu fontSize="large" />
           </IconButton>
         </Grid>

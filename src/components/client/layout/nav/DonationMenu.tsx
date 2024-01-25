@@ -32,33 +32,36 @@ type NavItem = {
   href: string
   label: string
   enabled?: boolean
+  prefetch: boolean
 }
 
-const allNavItems: NavItem[] = [
+export const navItems: NavItem[] = [
   {
     href: routes.campaigns.index,
     label: 'nav.campaigns.all-campaigns',
+    prefetch: true,
   },
   {
     href: routes.campaigns.news.index,
     label: 'nav.campaigns.news',
+    prefetch: false,
   },
   {
     href: routes.faq_campaigns, //temporarily lead to FAQ
     label: 'nav.campaigns.create',
+    prefetch: false,
   },
 ]
-
-export const navItems = allNavItems.filter((el) => typeof el.enabled === 'undefined' ?? el.enabled)
 
 export default function DonationMenu() {
   const { t } = useTranslation()
   const router = useRouter()
   return (
     <StyledGenericNavMenu id="menu-donation" label={t('nav.donation-menu')}>
-      {navItems.map(({ href, label }, key) => (
+      {navItems.map(({ href, label, prefetch }, key) => (
         <LinkMenuItem
           href={href}
+          prefetch={prefetch}
           selected={router.asPath === href}
           key={key}
           className={classes.dropdownLinkButton}>

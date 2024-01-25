@@ -2,7 +2,7 @@ import { Grid } from '@mui/material'
 import { styled } from '@mui/material/styles'
 
 export const QuillStypeWrapper = styled(Grid)(({ theme }) => ({
-  ['img']: {
+  ['img, iframe']: {
     maxWidth: '100%',
   },
 

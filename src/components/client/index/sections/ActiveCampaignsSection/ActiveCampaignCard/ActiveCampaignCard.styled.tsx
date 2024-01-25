@@ -7,42 +7,31 @@ import theme from 'common/theme'
 export const Root = styled(Card)(() => ({
   display: 'flex',
   flexDirection: 'column',
-  alignItems: 'initial',
   boxShadow: 'none',
-  position: 'relative',
+  width: '100%',
+  aspectRatio: 1,
+
   borderRadius: theme.spacing(0.37),
+  maxHeight: 323,
+
+  ':first-of-type': {
+    maxHeight: 670,
+  },
 
   '&:hover': {
     filter: 'grayscale(15%)',
     backgroundColor: '#F8F8F8	',
   },
-
-  [theme.breakpoints.up('lg')]: {
-    '&:nth-of-type(1)': {
-      gridArea: '1 / 1 / 3 / 3',
-
-      img: {
-        height: theme.spacing(60.625),
-      },
-    },
-  },
-
-  [theme.breakpoints.up(1430)]: {
-    '&:nth-of-type(1)': {
-      img: {
-        height: theme.spacing(71.6),
-      },
-    },
-  },
 }))
 
 export const StyledContent = styled(CardContent)(() => ({
   padding: 0,
+  justifyContent: 'flex-end',
 
   '&:last-child': { paddingBottom: 0 },
 }))
 
-export const CampaignTitle = styled('h6')(() => ({
+export const CampaignTitle = styled('h3')(() => ({
   fontSize: theme.typography.pxToRem(16),
   color: theme.palette.common.black,
   fontFamily: 'Montserrat, sans-serif',
@@ -85,9 +74,10 @@ export const SumNumber = styled('span')(() => ({
 
 export const StyledCardActions = styled(CardActions)(() => ({
   position: 'absolute',
-  bottom: theme.spacing(14.37),
-  right: theme.spacing(0.75),
+  bottom: theme.spacing(2.37),
+  right: theme.spacing(2),
   padding: 0,
+  zIndex: 1,
 }))
 
 export const DonateButton = styled(LinkButton)(() => ({

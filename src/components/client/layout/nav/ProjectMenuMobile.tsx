@@ -52,8 +52,14 @@ export default function ProjectMenuMobile() {
         {t('nav.about.about-us')}
       </AccordionSummary>
       <AccordionDetails>
-        {navItems.map(({ href, label }, key) => (
-          <LinkButton key={key} fullWidth variant="text" href={href} className={classes.menuItem}>
+        {navItems.map(({ href, label, prefetch }, key) => (
+          <LinkButton
+            key={key}
+            fullWidth
+            variant="text"
+            href={href}
+            prefetch={prefetch}
+            className={classes.menuItem}>
             {t(label)}
           </LinkButton>
         ))}

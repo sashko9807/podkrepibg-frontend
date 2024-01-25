@@ -11,11 +11,12 @@ import { Commissioner } from 'next/font/google'
 import { Montserrat } from 'next/font/google'
 
 export const commissioner = Commissioner({
+  display: 'swap',
   subsets: ['latin', 'cyrillic'],
 })
 
 export const montserrat = Montserrat({
-  display: 'auto',
+  display: 'swap',
   subsets: ['latin', 'cyrillic'],
 })
 

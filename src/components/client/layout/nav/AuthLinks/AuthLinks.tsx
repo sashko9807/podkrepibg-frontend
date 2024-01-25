@@ -18,13 +18,13 @@ export const AuthLinks = () => {
     return (
       <>
         <Grid item>
-          <StyledAuthButton fullWidth href={routes.profile.index}>
+          <StyledAuthButton fullWidth prefetch={false} href={routes.profile.index}>
             {t('nav.profile')}
           </StyledAuthButton>
         </Grid>
         {status === 'authenticated' && isAdmin(session) && (
           <Grid item>
-            <StyledAuthButton fullWidth href={routes.admin.index}>
+            <StyledAuthButton prefetch={false} fullWidth href={routes.admin.index}>
               {t('nav.admin.index')}
             </StyledAuthButton>
           </Grid>
@@ -41,9 +41,13 @@ export const AuthLinks = () => {
   return (
     <>
       <AuthLinksWrapper>
-        <AuthLink href={routes.login}>{t('nav.login')}</AuthLink>
+        <AuthLink href={routes.login} prefetch={false}>
+          {t('nav.login')}
+        </AuthLink>
         <SlashSymbol>/</SlashSymbol>
-        <AuthLink href={routes.register}>{t('nav.register')}</AuthLink>
+        <AuthLink href={routes.register} prefetch={false}>
+          {t('nav.register')}
+        </AuthLink>
       </AuthLinksWrapper>
     </>
   )

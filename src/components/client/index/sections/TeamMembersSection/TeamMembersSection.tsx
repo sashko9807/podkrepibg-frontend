@@ -13,12 +13,14 @@ export default function TeamMembersSection() {
   const teamImagePath = '/img/team-photos/team-image.png'
 
   return (
-    <Root>
-      <Heading variant="h4">{t('team-section.heading')}</Heading>
+    <Root aria-label="Meet our team">
+      <Heading variant="h4" component={'h1'}>
+        {t('team-section.heading')}
+      </Heading>
       <InfoText maxWidth="lg">{t('team-section.content')}</InfoText>
       <Box>
         <Image
-          alt="Team image"
+          alt="Meet our team"
           src={teamImagePath}
           style={{ maxWidth: '100%', height: 'auto', objectFit: 'contain' }}
           width={1095}

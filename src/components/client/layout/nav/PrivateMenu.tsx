@@ -91,7 +91,10 @@ export default function PrivateMenu() {
         open={Boolean(anchorEl)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}>
-        <LinkMenuItem href={routes.profile.index} className={classes.dropdownLinkText}>
+        <LinkMenuItem
+          href={routes.profile.index}
+          className={classes.dropdownLinkText}
+          prefetch={false}>
           <Typography variant="button">{t('nav.profile')}</Typography>
         </LinkMenuItem>
         {status === 'authenticated' &&
@@ -99,6 +102,7 @@ export default function PrivateMenu() {
           adminItems.map(({ href, label }, key) => (
             <LinkMenuItem
               href={href}
+              prefetch={false}
               selected={router.asPath === href}
               key={key}
               className={classes.dropdownLinkButton}>

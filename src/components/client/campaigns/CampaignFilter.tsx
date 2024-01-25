@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import { styled } from '@mui/material/styles'
-import { Box, CircularProgress, IconButton, ImageList, Typography } from '@mui/material'
-import { useCampaignList } from 'common/hooks/campaigns'
+import { Grid, IconButton, Typography } from '@mui/material'
+import { useCampaignListReOrdered } from 'common/hooks/campaigns'
 import CampaignsList from './CampaignsList'
 import { CampaignResponse } from 'gql/campaigns'
 import { CampaignTypeCategory } from 'components/common/campaign-types/categories'
@@ -20,42 +20,45 @@ import {
   TheaterComedy,
   VolunteerActivism,
 } from '@mui/icons-material'
-import useMobile from 'common/hooks/useMobile'
 import theme from 'common/theme'
 
 const PREFIX = 'CampaignFilter'
 
 const classes = {
   filterButtons: `${PREFIX}-filterButtons`,
+  filterButtonContainer: `${PREFIX}-filterButtonsCtn`,
 }
 
 const Root = styled('div')(() => ({
+  [`& .${classes.filterButtonContainer}`]: {
+    display: 'flex',
+    justifyContent: 'center',
+  },
   [`& .${classes.filterButtons}`]: {
-    display: 'block',
+    width: '100%',
     height: '80px',
     borderRadius: 0,
     borderBottom: '1px solid transparent',
-    padding: 1,
-
-    '&:active': {
-      color: theme.palette.primary.light,
-      borderBottom: `5px solid ${theme.palette.primary.light}`,
-    },
-
-    '&:hover': {
-      backgroundColor: theme.palette.common.white,
-      borderBottom: `5px solid ${theme.palette.primary.light}`,
-      color: theme.palette.primary.light,
-    },
-
-    '&:focus': {
-      color: theme.palette.primary.light,
-      borderBottom: `5px solid ${theme.palette.primary.light}`,
-    },
+    display: 'flex',
+    flexDirection: 'column',
 
     '&:selected': {
       color: theme.palette.primary.light,
       borderBottom: `5px solid ${theme.palette.primary.light}`,
+    },
+    '&:active': {
+      color: theme.palette.primary.light,
+      borderBottom: `5px solid ${theme.palette.primary.light}`,
+    },
+    '&:focus': {
+      color: theme.palette.primary.light,
+      borderBottom: `5px solid ${theme.palette.primary.light}`,
+      background: 'transperent',
+    },
+    '&:hover': {
+      color: theme.palette.primary.light,
+      borderBottom: `5px solid ${theme.palette.primary.light}`,
+      backgroundColor: 'white',
     },
   },
 }))
@@ -78,58 +81,63 @@ const categories: {
 
 export default function CampaignFilter() {
   const { t } = useTranslation()
-  const { mobile } = useMobile()
-  const { data: campaigns, isLoading } = useCampaignList(true)
+
+  const { data: campaigns } = useCampaignListReOrdered(true, 'campaignPage')
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL')
+  const campaignList = campaigns?.activeCampaigns.concat(campaigns.completedCampaigns)
   // TODO: add filters&sorting of campaigns so people can select based on personal preferences
   const campaignToShow = useMemo<CampaignResponse[]>(() => {
+    if (selectedCategory === 'ALL') {
+      return campaignList ?? []
+    }
     const filteredCampaigns =
-      campaigns?.filter((campaign) => {
-        if (selectedCategory != 'ALL') {
-          return campaign.campaignType.category === selectedCategory
-        }
-        return campaign
-      }) ?? []
+      campaignList?.filter((campaign) => campaign.campaignType.category === selectedCategory) ?? []
     return filteredCampaigns
   }, [campaigns, selectedCategory])
 
   return (
-    <Root>
-      <ImageList
-        cols={mobile ? 2 : 6}
-        rowHeight={120}
-        gap={2}
-        sx={{ maxWidth: 'lg', margin: '0 auto', my: 6 }}>
-        {Object.values(CampaignTypeCategory).map((category) => {
-          const count =
-            campaigns?.filter((campaign) => campaign.campaignType.category === category).length ?? 0
-          return (
-            <IconButton
-              key={category}
-              disabled={count === 0}
-              className={classes.filterButtons}
-              onClick={() => setSelectedCategory(category)}>
-              {categories[category].icon ?? <Category fontSize="small" />}
-              <Typography>
-                {t(`campaigns:filters.${category}`)} ({count})
-              </Typography>
-            </IconButton>
-          )
-        })}
-        <IconButton className={classes.filterButtons} onClick={() => setSelectedCategory('ALL')}>
-          <FilterNone fontSize="small" />
-          <Typography>
-            {t(`campaigns:filters.all`)} ({campaigns?.length ?? 0})
-          </Typography>
-        </IconButton>
-      </ImageList>
-      {isLoading ? (
-        <Box textAlign="center">
-          <CircularProgress size="3rem" />
-        </Box>
-      ) : (
-        <CampaignsList campaignToShow={campaignToShow} />
-      )}
-    </Root>
+    <>
+      <Grid
+        container
+        justifyContent={'center'}
+        display={'flex'}
+        component={'section'}
+        aria-label="Campaign filters">
+        <Root>
+          <Grid container item sx={{ my: 5 }} maxWidth={'lg'}>
+            {Object.values(CampaignTypeCategory).map((category) => {
+              const count = campaignList?.reduce((acc, curr) => {
+                return category === curr.campaignType.category ? acc + 1 : acc
+              }, 0)
+              return (
+                <Grid item xs={6} md={2} className={classes.filterButtonContainer} key={category}>
+                  <IconButton
+                    key={category}
+                    className={classes.filterButtons}
+                    disabled={count === 0}
+                    onClick={() => setSelectedCategory(category)}>
+                    {categories[category].icon ?? <Category fontSize="small" />}
+                    <Typography>
+                      {t(`campaigns:filters.${category}`)} ({count})
+                    </Typography>
+                  </IconButton>
+                </Grid>
+              )
+            })}
+            <Grid item xs={6} md={2} className={classes.filterButtonContainer}>
+              <IconButton
+                className={classes.filterButtons}
+                onClick={() => setSelectedCategory('ALL')}>
+                <FilterNone fontSize="small" />
+                <Typography>
+                  {t(`campaigns:filters.all`)} ({campaignList?.length ?? 0})
+                </Typography>
+              </IconButton>
+            </Grid>
+          </Grid>
+        </Root>
+      </Grid>
+      <CampaignsList campaignToShow={campaignToShow} />
+    </>
   )
 }

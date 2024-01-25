@@ -74,12 +74,15 @@ export default function PublicMenu() {
         onClose={handleClose}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}>
-        <LinkMenuItem href={routes.login} className={classes.dropdownLinkButton}>
+        <LinkMenuItem href={routes.login} className={classes.dropdownLinkButton} prefetch={false}>
           <Typography variant="button" className={classes.dropdownLinkText}>
             {t('nav.login')}
           </Typography>
         </LinkMenuItem>
-        <LinkMenuItem href={routes.register} className={classes.dropdownLinkButton}>
+        <LinkMenuItem
+          href={routes.register}
+          className={classes.dropdownLinkButton}
+          prefetch={false}>
           <Typography variant="button" className={classes.dropdownLinkText}>
             {t('nav.register')}
           </Typography>

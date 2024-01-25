@@ -13,11 +13,9 @@ import { useCampaignNewsList } from 'common/hooks/campaign-news'
 
 import Link from 'next/link'
 
-import dynamic from 'next/dynamic'
-
 import BreadcrumbWrapper from 'components/common/BreadcrumbWrapper'
 
-const CampaignNewsList = dynamic(() => import('./CampaignNewsList'), { ssr: false })
+import CampaignNewsList from './CampaignNewsList'
 
 const PREFIX = 'CampaignsNewsPage'
 
@@ -67,6 +65,7 @@ export default function CampaignNewsPage({ page, slug = null }: Props) {
 
   return (
     <Root
+      suppressHydrationWarning
       maxWidth={false}
       style={{ padding: theme.spacing(0) }}
       prevPage={

@@ -1,11 +1,8 @@
 import React, { useState } from 'react'
 
 import { useTranslation } from 'next-i18next'
-import dynamic from 'next/dynamic'
 
 import { CampaignResponse } from 'gql/campaigns'
-
-import 'react-quill/dist/quill.bubble.css'
 
 import { Divider, Grid, IconButton, Tooltip, Typography } from '@mui/material'
 import SecurityIcon from '@mui/icons-material/Security'
@@ -28,15 +25,16 @@ import { moneyPublic } from 'common/util/money'
 import CampaignPublicExpensesChart from './CampaignPublicExpensesChart'
 import EmailIcon from '@mui/icons-material/Email'
 import RenderCampaignSubscribeModal from '../notifications/CampaignSubscribeModal'
-
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false })
-const CampaignNewsSection = dynamic(() => import('./CampaignNewsSection'), { ssr: false })
+import { QuillStypeWrapper } from 'components/common/QuillStyleWrapper'
+import { sanitizeHTML } from 'common/util/htmlUtils'
+import CampaignNewsSection from './CampaignNewsSection'
 
 const PREFIX = 'CampaignDetails'
 
 const classes = {
   banner: `${PREFIX}-banner`,
   campaignTitle: `${PREFIX}-campaignTitle`,
+  campaignDescription: `${PREFIX}-campaignDescription`,
   linkButton: `${PREFIX}-linkButton`,
   securityIcon: `${PREFIX}-securityIcon`,
   subscribeLink: `${PREFIX}-subscribe`,
@@ -65,17 +63,6 @@ const StyledGrid = styled(Grid)(({ theme }) => ({
       marginTop: 0,
       marginBottom: theme.spacing(1),
     },
-  },
-
-  ['& .ql-editor']: {
-    fontSize: theme.spacing(2),
-    fontWeight: 500,
-    lineHeight: theme.spacing(4),
-    paddingLeft: '0',
-    paddingRight: '0',
-  },
-  ['& .ql-container']: {
-    fontFamily: theme.typography.fontFamily,
   },
 
   [`& .${classes.linkButton}`]: {
@@ -128,6 +115,7 @@ export default function CampaignDetails({ campaign }: Props) {
   const canEditCampaign = useCanEditCampaign(campaign.slug)
   const { data: expensesList } = useCampaignApprovedExpensesList(campaign.slug)
   const totalExpenses = expensesList?.reduce((acc, expense) => acc + expense.amount, 0)
+  const sanitizedDescription = sanitizeHTML(campaign.description)
 
   return (
     <StyledGrid item xs={12} md={8}>
@@ -154,9 +142,15 @@ export default function CampaignDetails({ campaign }: Props) {
             {t('campaigns:cta.subscribe')}
           </Typography>
         </Grid>
-        <Grid item xs={12} style={{ paddingTop: '20px' }}>
-          <ReactQuill readOnly theme="bubble" value={campaign.description} />
-        </Grid>
+        <QuillStypeWrapper item xs={12}>
+          <Typography
+            component={'div'}
+            dangerouslySetInnerHTML={{
+              __html: sanitizedDescription,
+            }}
+            sx={{ wordBreak: 'break-word' }}
+          />
+        </QuillStypeWrapper>
         <Grid item xs={12}>
           <ImageSlider sliderImages={sliderImages} />
         </Grid>

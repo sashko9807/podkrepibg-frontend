@@ -39,52 +39,64 @@ type NavItem = {
   label: string
   enabled?: boolean
   target?: string
+  prefetch: boolean
 }
 
 const allNavItems: NavItem[] = [
   {
     href: routes.about,
     label: 'nav.about.who-are-we',
+    prefetch: false,
   },
   {
     href: routes.aboutProject,
     label: 'nav.about.about-project',
+    prefetch: false,
   },
   {
     href: routes.blog.index,
     label: 'nav.blog',
+    prefetch: false,
   },
   {
     href: routes.support_us,
     label: 'nav.about.support_us',
+    prefetch: false,
   },
   {
     href: routes.support,
     label: 'nav.about.support-us',
+    prefetch: false,
   },
   {
     href: routes.reports,
     label: 'nav.about.reports',
+    prefetch: false,
   },
   {
     href: routes.dev.openData,
     label: 'nav.dev.open-data',
+    prefetch: false,
   },
   {
     href: routes.contact,
     label: 'nav.about.contacts',
+    prefetch: false,
   },
   {
     href: routes.partners,
     label: 'nav.about.partners',
+    prefetch: false,
   },
   {
     href: routes.termsOfService,
     label: 'components.footer.terms-of-service',
+    prefetch: false,
   },
   {
     href: routes.faq,
     label: 'nav.campaigns.faq',
+    prefetch: false,
   },
 ]
 
@@ -96,7 +108,7 @@ export default function ProjectMenu() {
 
   return (
     <StyledGenericNavMenu id="menu-project" label={t('nav.about.about-us')}>
-      {navItems.map(({ href, label, target }, key) =>
+      {navItems.map(({ href, label, target, prefetch }, key) =>
         target ? (
           <ExternalLinkMenuItem
             href={href}
@@ -113,6 +125,7 @@ export default function ProjectMenu() {
             href={href}
             selected={router.asPath === href}
             key={key}
+            prefetch={prefetch}
             className={classes.dropdownLinkButton}>
             <Typography variant="button" className={classes.dropdownLinkText}>
               {t(label)}

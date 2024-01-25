@@ -14,6 +14,7 @@ import FaqSection from './sections/FaqSection/FaqSection'
 
 export default function IndexPage() {
   const { t } = useTranslation('index')
+
   return (
     <Layout
       maxWidth={false}

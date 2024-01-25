@@ -1,35 +1,33 @@
 import { useTranslation } from 'next-i18next'
 
-import { CardMedia } from '@mui/material'
+import Image from 'next/image'
 
 import { articles } from 'components/admin/partners/helpers/mediaAboutUsData'
-import theme from 'common/theme'
+
 import { settings } from './MediaCarouselSettings'
 
 import { Heading } from '../../IndexPage.styled'
-import { ArticleLink, CarouselWrapper, Root } from './MediaSection.styled'
+import { StyledMediaSection, classes } from './MediaSection.styled'
+import Carousel from 'components/common/Carousel'
+import ExternalLink from 'components/common/ExternalLink'
 
 export default function MediaSection() {
   const { t } = useTranslation('index')
 
   return (
-    <Root>
-      <Heading variant="h4" px={3}>
+    <StyledMediaSection aria-label="Media articles about Podkrepi.bg">
+      <Heading variant="h4" component={'h1'} px={3}>
         {t('media-heading')}
       </Heading>
-      <CarouselWrapper {...settings}>
+      <Carousel {...settings}>
         {articles.map((article, index) => (
-          <ArticleLink href={article.url} key={index}>
-            <CardMedia
-              component="img"
-              height="100%"
-              image={article.img}
-              alt={article.title}
-              sx={{ height: theme.spacing(12.5), width: theme.spacing(12.5), margin: '0 auto' }}
-            />
-          </ArticleLink>
+          <div data-testid={`${article.title}`} key={index}>
+            <ExternalLink href={article.url} className={classes.wrapper}>
+              <Image src={article.img} alt={article.title} width={100} height={100} />
+            </ExternalLink>
+          </div>
         ))}
-      </CarouselWrapper>
-    </Root>
+      </Carousel>
+    </StyledMediaSection>
   )
 }

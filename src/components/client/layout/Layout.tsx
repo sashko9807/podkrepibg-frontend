@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import Script from 'next/script'
+
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'next-i18next'
 import { Box, BoxProps, Container, ContainerProps, Typography } from '@mui/material'
@@ -8,9 +8,12 @@ import Footer from 'components/client/layout/Footer/Footer'
 import Snackbar from 'components/client/layout/Snackbar'
 import { defaultOgImage } from 'common/routes'
 import DetailsModal from 'components/admin/modal/DetailsModal'
+import dynamic from 'next/dynamic'
 
 import AppNavBar from './AppNavBar'
-import MobileNav from './nav/MobileNav/MobileNav'
+import useMobile from 'common/hooks/useMobile'
+
+const MobileNav = dynamic(() => import('./nav/MobileNav/MobileNav'))
 
 const createPageTitle = (suffix: string, title?: string) => {
   if (title) {
@@ -54,6 +57,7 @@ export default function Layout({
   const { t, i18n } = useTranslation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const navMenuToggle = () => setMobileOpen(!mobileOpen)
+  const { small } = useMobile()
   const pageTitle = useMemo(
     () => createPageTitle(t('meta.title'), metaTitle ?? title),
     [metaTitle, title],
@@ -104,13 +108,9 @@ export default function Layout({
             />
           )}
         </Head>
-        <Script async src="https://www.googleoptimize.com/optimize.js?id=OPT-W89QK8X" />
         <Box pt={4} pb={disableOffset ? 0 : 10} {...boxProps}>
-          {!mobileOpen ? (
-            <AppNavBar navMenuToggle={navMenuToggle} />
-          ) : (
-            <MobileNav mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
-          )}
+          <AppNavBar navMenuToggle={navMenuToggle} />
+          {small && <MobileNav mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />}
           {!disableOffset && (
             <Box sx={(theme) => ({ ...theme.mixins.toolbar, mb: { xs: 0, md: 3, lg: 6 } })} />
           )}
@@ -129,7 +129,7 @@ export default function Layout({
               {title}
             </Typography>
           )}
-          {children}
+          <main>{children}</main>
         </Box>
         <Snackbar />
         <DetailsModal />

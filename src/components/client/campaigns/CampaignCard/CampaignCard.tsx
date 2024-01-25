@@ -47,29 +47,42 @@ export default function ActiveCampaignCard({ campaign, index }: Props) {
 
   return (
     <Root data-testid={`campaign-card-${index}`}>
-      <Link href={routes.campaigns.viewCampaignBySlug(slug)}>
-        <Box
-          position={'relative'}
-          sx={{
-            width: '100%',
-            aspectRatio: 1.5,
-            maxHeight: theme.spacing(27.9),
-          }}>
-          <Image
-            priority
-            src={campaignImagesUrl}
-            alt={title}
-            fill
-            sizes="(min-width: 2000px) 312px, (min-width: 1200px) calc(30vw - 38px), (min-width: 900px) calc(40.57vw - 29px), (min-width: 600px) calc(50vw - 28px), calc(100vw - 32px)"
-            quality={index === 0 ? 100 : 75}
-            style={{ objectFit: 'cover' }}
-          />
-        </Box>
-        {campaignState === CampaignState.complete && percentage >= 100 ? (
-          <SuccessfullCampaignTag />
-        ) : (
-          ''
-        )}
+      <Box
+        position={'relative'}
+        sx={{
+          width: '100%',
+          aspectRatio: 1.5,
+          maxHeight: theme.spacing(27.9),
+        }}>
+        <Link href={routes.campaigns.viewCampaignBySlug(slug)}>
+          <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+            <Image
+              priority
+              src={campaignImagesUrl}
+              alt={title}
+              fill
+              sizes="(min-width: 2000px) 312px, (min-width: 1200px) calc(30vw - 38px), (min-width: 900px) calc(40.57vw - 29px), (min-width: 600px) calc(50vw - 28px), calc(100vw - 32px)"
+              quality={75}
+              style={{ objectFit: 'cover' }}
+            />
+          </div>
+        </Link>
+        <StyledCardActions disableSpacing>
+          <DonateButton
+            href={routes.campaigns.oneTimeDonation(slug)}
+            disabled={campaignState === CampaignState.complete && !allowDonationOnComplete}
+            variant="contained"
+            color="secondary">
+            {t('cta.support')}
+          </DonateButton>
+        </StyledCardActions>
+      </Box>
+      {campaignState === CampaignState.complete && percentage >= 100 ? (
+        <SuccessfullCampaignTag />
+      ) : (
+        ''
+      )}
+      <Link href={routes.campaigns.viewCampaignBySlug(slug)} tabIndex={-1}>
         <StyledContent>
           <SumWrapper>
             <Sum>
@@ -91,15 +104,6 @@ export default function ActiveCampaignCard({ campaign, index }: Props) {
           <CampaignTitle>{title}</CampaignTitle>
         </StyledContent>
       </Link>
-      <StyledCardActions disableSpacing>
-        <DonateButton
-          href={routes.campaigns.oneTimeDonation(slug)}
-          disabled={campaignState === CampaignState.complete && !allowDonationOnComplete}
-          variant="contained"
-          color="secondary">
-          {t('cta.support')}
-        </DonateButton>
-      </StyledCardActions>
     </Root>
   )
 }

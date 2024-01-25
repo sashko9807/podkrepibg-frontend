@@ -44,42 +44,41 @@ export default function MobileNav({ mobileOpen, setMobileOpen }: NavDeckProps) {
   }, [])
 
   return (
-    <Grid sx={{ display: { xs: 'flex', md: 'none' } }}>
-      <SwipeableDrawer
-        anchor="right"
-        open={mobileOpen}
-        variant="temporary"
-        ModalProps={{ keepMounted: true }}
-        onOpen={() => setMobileOpen(true)}
-        onClose={closeNavMenu}>
-        <NavMenuWrapper>
-          <OpenMenuHeader>
-            <Link href={routes.index} passHref>
-              <PodkrepiLogo locale={locale} variant="adaptive" />
-            </Link>
-            <CloseButton edge="end" fontSize="large" onClose={closeNavMenu} />
-          </OpenMenuHeader>
-          <Grid item>
-            <DonationMenuMobile />
-          </Grid>
-          <Grid item>
-            <ProjectMenuMobile />
-          </Grid>
-          <AuthLinks />
-          <LocaleButtonWrapper>
-            <LocaleButton />
-          </LocaleButtonWrapper>
-          <Grid textAlign="center">
-            <DonateButton
-              size="large"
-              variant="outlined"
-              href={routes.campaigns.index}
-              endIcon={<FavoriteIcon color="primary" fontSize="medium" />}>
-              {t('nav.donate')}
-            </DonateButton>
-          </Grid>
-        </NavMenuWrapper>
-      </SwipeableDrawer>
-    </Grid>
+    <SwipeableDrawer
+      anchor="right"
+      open={mobileOpen}
+      variant="temporary"
+      aria-label="menu"
+      ModalProps={{ keepMounted: true }}
+      onOpen={() => setMobileOpen(true)}
+      onClose={closeNavMenu}>
+      <NavMenuWrapper>
+        <OpenMenuHeader>
+          <Link href={routes.index} passHref>
+            <PodkrepiLogo locale={locale} variant="adaptive" />
+          </Link>
+          <CloseButton edge="end" fontSize="large" onClose={closeNavMenu} />
+        </OpenMenuHeader>
+        <Grid item>
+          <DonationMenuMobile />
+        </Grid>
+        <Grid item>
+          <ProjectMenuMobile />
+        </Grid>
+        <AuthLinks />
+        <LocaleButtonWrapper>
+          <LocaleButton />
+        </LocaleButtonWrapper>
+        <Grid textAlign="center">
+          <DonateButton
+            size="large"
+            variant="outlined"
+            href={routes.campaigns.index}
+            endIcon={<FavoriteIcon color="primary" fontSize="medium" />}>
+            {t('nav.donate')}
+          </DonateButton>
+        </Grid>
+      </NavMenuWrapper>
+    </SwipeableDrawer>
   )
 }

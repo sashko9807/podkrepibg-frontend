@@ -1,10 +1,11 @@
 import { Typography } from '@mui/material'
 import { styled } from '@mui/material/styles'
+import type { TypographyProps } from '@mui/material'
 
 import theme from 'common/theme'
 import LinkButton from 'components/common/LinkButton'
 
-export const Heading = styled(Typography)(() => ({
+export const Heading = styled(Typography)<TypographyProps>(() => ({
   color: '#212121',
   textAlign: 'center',
   fontWeight: 500,

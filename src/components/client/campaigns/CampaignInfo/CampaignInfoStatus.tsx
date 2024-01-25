@@ -23,9 +23,9 @@ export default function CampaignInfoStatus({ campaign, showExpensesLink }: Props
   return (
     <Grid>
       <Box
-        component="span"
         sx={{
           display: 'flex',
+          flexWrap: 'wrap',
           gap: theme.spacing(1),
           margin: theme.spacing(3, 0, 6),
           alignItems: 'center',

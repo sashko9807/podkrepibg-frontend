@@ -6,6 +6,7 @@ type ReadMore = {
 
 export function useShowMoreContent() {
   const [isExpanded, setIsExpanded] = useState<ReadMore>({})
+  const [isExpandable, setIsExpandable] = useState<ReadMore>({})
 
   const expandContent = (articleId: string): void => {
     setIsExpanded((prevState: ReadMore): ReadMore => {
@@ -16,5 +17,14 @@ export function useShowMoreContent() {
     })
   }
 
-  return [isExpanded, expandContent] as const
+  const handleIsExpandable = (articleId: string, isExpandable: boolean) => {
+    setIsExpandable((prevState) => {
+      return {
+        ...prevState,
+        [articleId]: isExpandable,
+      }
+    })
+  }
+
+  return [isExpanded, expandContent, isExpandable, handleIsExpandable] as const
 }

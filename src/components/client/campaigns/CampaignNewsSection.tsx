@@ -29,6 +29,7 @@ import { QuillStypeWrapper } from 'components/common/QuillStyleWrapper'
 import { scrollToTop } from '../campaign-news/utils/scrollToTop'
 import { getArticleHeight } from '../campaign-news/utils/getArticleHeight'
 import Gallery from 'components/common/Gallery'
+import { useEffect } from 'react'
 
 const PREFIX = 'NewsTimeline'
 
@@ -163,7 +164,16 @@ export default function CampaignNewsSection({ campaign, canCreateArticle }: Prop
   const { small }: { small: boolean } = useMobile()
 
   const INITIAL_HEIGHT_LIMIT = 200
-  const [isExpanded, expandContent] = useShowMoreContent()
+  const [isExpanded, expandContent, isExpandable, setIsExpandable] = useShowMoreContent()
+
+  useEffect(() => {
+    if (campaign.campaignNews.length === 0) return
+    for (const article of campaign.campaignNews) {
+      const articleHeight = getArticleHeight(article.id)
+      const isBiggerThanLimit = articleHeight > INITIAL_HEIGHT_LIMIT
+      setIsExpandable(article.id, isBiggerThanLimit)
+    }
+  }, [])
 
   return (
     <Grid container item xs={12} spacing={1} id="news">
@@ -257,8 +267,7 @@ export default function CampaignNewsSection({ campaign, canCreateArticle }: Prop
                         direction={'row'}
                         sx={{
                           height:
-                            getArticleHeight(article.id) > INITIAL_HEIGHT_LIMIT &&
-                            !isExpanded[article.id]
+                            isExpandable[article.id] && !isExpanded[article.id]
                               ? INITIAL_HEIGHT_LIMIT
                               : 'auto',
                           overflow: 'hidden',
@@ -274,7 +283,7 @@ export default function CampaignNewsSection({ campaign, canCreateArticle }: Prop
                           />
                         </QuillStypeWrapper>
                       </Grid>
-                      {getArticleHeight(article.id) >= INITIAL_HEIGHT_LIMIT && (
+                      {isExpandable[article.id] && (
                         <Button
                           className={classes.readMoreButton}
                           onClick={() => {

@@ -1,7 +1,7 @@
 import { Settings } from 'react-slick'
 
 export const settings: Settings = {
-  infinite: true,
+  infinite: false,
   speed: 500,
   slidesToShow: 5,
   slidesToScroll: 1,

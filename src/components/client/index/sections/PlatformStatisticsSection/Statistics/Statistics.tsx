@@ -2,7 +2,7 @@ import React from 'react'
 import { useTranslation } from 'next-i18next'
 
 import { fromMoney } from 'common/util/money'
-import { useCampaignDonationHistory, useCampaignList } from 'common/hooks/campaigns'
+import { useCampaignDonationHistory, useCampaignListReOrdered } from 'common/hooks/campaigns'
 import { getTotalDonatedMoney, useDonatedUsersCount } from 'common/hooks/donation'
 import { toNumberWithSpacesBetween } from 'common/util/number'
 
@@ -18,7 +18,7 @@ import { Stack } from '@mui/material'
 
 export default function Statistics() {
   const { t } = useTranslation('index')
-  const { data: campaigns } = useCampaignList(true)
+  const { data: campaigns } = useCampaignListReOrdered(true, 'indexPage')
   const { data: totalDonations } = useCampaignDonationHistory(undefined, 0, 1) //ask only for 1 item to get the total count
   const { data: donorsCount } = useDonatedUsersCount()
   const { data: totalDonatedMoney } = getTotalDonatedMoney()
@@ -29,7 +29,7 @@ export default function Statistics() {
 
   const sections: { value?: number; message: string }[] = [
     {
-      value: campaigns?.length,
+      value: campaigns?.activeCampaigns.concat(campaigns.completedCampaigns).length,
       message: t('platform-statistics.campaigns'),
     },
     {
@@ -47,22 +47,26 @@ export default function Statistics() {
       {sections.map((section, index) => (
         <React.Fragment key={index}>
           <StatisticsWrapper>
-            <SubtitleSectionNumber variant="subtitle1">
+            <SubtitleSectionNumber variant="subtitle1" component={'h2'}>
               {toNumberWithSpacesBetween(section.value)}
             </SubtitleSectionNumber>
-            <SubtitleSectionText variant="subtitle1">{section.message}</SubtitleSectionText>
+            <SubtitleSectionText variant="subtitle2" component={'p'}>
+              {section.message}
+            </SubtitleSectionText>
           </StatisticsWrapper>
           <SectionDivider />
         </React.Fragment>
       ))}
       <StatisticsWrapper>
         <Stack flexDirection="row">
-          <SubtitleSectionNumber variant="subtitle1">
+          <SubtitleSectionNumber variant="subtitle1" component={'h2'}>
             {toNumberWithSpacesBetween(unit)}
           </SubtitleSectionNumber>
-          <Fraction>{fraction}</Fraction>
+          <Fraction component={'span'}>{fraction}</Fraction>
         </Stack>
-        <SubtitleSectionText>{t('platform-statistics.donated-leva')}</SubtitleSectionText>
+        <SubtitleSectionText variant="subtitle2" component={'p'}>
+          {t('platform-statistics.donated-leva')}
+        </SubtitleSectionText>
       </StatisticsWrapper>
       <SectionDivider />
     </StatisticsSectionWrapper>

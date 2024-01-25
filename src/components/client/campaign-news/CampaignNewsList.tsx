@@ -11,13 +11,14 @@ import { useTranslation } from 'next-i18next'
 import Image from 'next/image'
 import { GetArticleDocuments, GetArticleGalleryPhotos } from 'common/util/newsFilesUrls'
 import { useShowMoreContent } from './hooks/useShowMoreContent'
-import { HTMLContentSeparator } from 'common/util/htmlUtils'
+import { sanitizeHTML } from 'common/util/htmlUtils'
 import theme from 'common/theme'
 import { QuillStypeWrapper } from 'components/common/QuillStyleWrapper'
 import { scrollToTop } from './utils/scrollToTop'
 import { getArticleHeight } from './utils/getArticleHeight'
 
 import Gallery from 'components/common/Gallery'
+import { useEffect } from 'react'
 
 const PREFIX = 'CampaignNewsSection'
 const classes = {
@@ -82,13 +83,22 @@ type Props = {
 export default function CampaignNewsList({ articles }: Props) {
   const { t, i18n } = useTranslation('news')
   const INITIAL_HEIGHT_LIMIT = 400
-  const [isExpanded, expandContent] = useShowMoreContent()
+  const [isExpanded, expandContent, isExpandable, setIsExpandable] = useShowMoreContent()
+
+  useEffect(() => {
+    if (articles.length === 0) return
+    for (const article of articles) {
+      const articleHeight = getArticleHeight(article.id)
+      const isBiggerThanLimit = articleHeight > INITIAL_HEIGHT_LIMIT
+      setIsExpandable(article.id, isBiggerThanLimit)
+    }
+  }, [])
   return (
     <>
       {articles?.map((article, index: number) => {
         const documents = GetArticleDocuments(article.newsFiles)
         const images = GetArticleGalleryPhotos(article.newsFiles)
-        const [, sanitizedDescription] = HTMLContentSeparator(article.description)
+        const sanitizedDescription = sanitizeHTML(article.description)
         return (
           <Grid
             container
@@ -120,11 +130,11 @@ export default function CampaignNewsList({ articles }: Props) {
               </Grid>
               <Grid
                 container
-                rowGap={1}
-                columnGap={4}
+                item
+                direction={'row'}
                 sx={{
                   height:
-                    getArticleHeight(article.id) > INITIAL_HEIGHT_LIMIT && !isExpanded[article.id]
+                    isExpandable[article.id] && !isExpanded[article.id]
                       ? INITIAL_HEIGHT_LIMIT
                       : 'auto',
                   overflow: 'hidden',
@@ -176,7 +186,7 @@ export default function CampaignNewsList({ articles }: Props) {
                   </>
                 )}
               </Grid>
-              {getArticleHeight(article.id) > INITIAL_HEIGHT_LIMIT && (
+              {isExpandable[article.id] && (
                 <Button
                   key={article.id}
                   className={classes.readMoreButton}

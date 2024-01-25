@@ -14,9 +14,11 @@ export default function FaqSection() {
   const { t } = useTranslation()
 
   return (
-    <Root>
+    <Root aria-label="Frequently asked questions">
       <Grid maxWidth="lg">
-        <Heading variant="h4">{t('common:nav.campaigns.faq')}</Heading>
+        <Heading variant="h4" component={'h1'}>
+          {t('common:nav.campaigns.faq')}
+        </Heading>
         <FaqWrapper container spacing={2}>
           {data.COMMON_QUESTIONS.slice(0, 5).flatMap(({ header, content, visible }) =>
             visible ? (

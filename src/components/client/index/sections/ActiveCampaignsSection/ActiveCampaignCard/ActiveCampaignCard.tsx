@@ -1,11 +1,9 @@
 import { useTranslation, i18n } from 'next-i18next'
 import { CampaignResponse } from 'gql/campaigns'
 
-import { Box } from '@mui/material'
-
-import Link from 'components/common/Link'
+import Link from 'next/link'
 import CampaignProgress from 'components/client/campaigns/CampaignProgress'
-import theme from 'common/theme'
+
 import { routes } from 'common/routes'
 import { campaignListPictureUrl } from 'common/util/campaignImageUrls'
 import { moneyPublic } from 'common/util/money'
@@ -36,27 +34,36 @@ export default function ActiveCampaignCard({ campaign, index }: Props) {
 
   return (
     <Root data-testid={`completed-campaign-${index}`}>
-      <Link href={routes.campaigns.viewCampaignBySlug(slug)}>
-        <Box
-          position={'relative'}
-          sx={{
-            width: '100%',
-            aspectRatio: 1.5,
-            [theme.breakpoints.up('lg')]: {
-              maxHeight: index === 0 ? theme.spacing(71.2) : theme.spacing(27.65),
-              aspectRatio: index === 0 ? 0.9 : 1,
-            },
-          }}>
-          <Image
-            priority
-            src={campaignImagesUrl}
-            alt={title}
-            fill
-            sizes="(min-width: 2000px) 312px, (min-width: 1200px) calc(30vw - 38px), (min-width: 900px) calc(40.57vw - 29px), (min-width: 600px) calc(50vw - 28px), calc(100vw - 32px)"
-            quality={index === 0 ? 100 : 75}
-            style={{ objectFit: 'cover' }}
-          />
-        </Box>
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          aspectRatio: 1,
+        }}>
+        <Link href={routes.campaigns.viewCampaignBySlug(slug)}>
+          <div style={{ position: 'relative', height: '100%', width: '100%' }}>
+            <Image
+              priority
+              src={campaignImagesUrl}
+              alt={title}
+              fill
+              sizes="(min-width: 2000px) 312px, (min-width: 1200px) calc(30vw - 38px), (min-width: 900px) calc(40.57vw - 29px), (min-width: 600px) calc(50vw - 28px), calc(100vw - 32px)"
+              quality={index === 0 ? 100 : 75}
+              style={{ objectFit: 'cover' }}
+            />
+          </div>
+        </Link>
+        <StyledCardActions disableSpacing>
+          <DonateButton
+            href={routes.campaigns.oneTimeDonation(slug)}
+            prefetch={false}
+            variant="contained"
+            color="secondary">
+            {t('cta.support')}
+          </DonateButton>
+        </StyledCardActions>
+      </div>
+      <Link href={routes.campaigns.viewCampaignBySlug(slug)} tabIndex={-1}>
         <StyledContent>
           <SumWrapper>
             <Sum>
@@ -78,14 +85,6 @@ export default function ActiveCampaignCard({ campaign, index }: Props) {
           <CampaignTitle>{title}</CampaignTitle>
         </StyledContent>
       </Link>
-      <StyledCardActions disableSpacing>
-        <DonateButton
-          href={routes.campaigns.oneTimeDonation(slug)}
-          variant="contained"
-          color="secondary">
-          {t('cta.support')}
-        </DonateButton>
-      </StyledCardActions>
     </Root>
   )
 }

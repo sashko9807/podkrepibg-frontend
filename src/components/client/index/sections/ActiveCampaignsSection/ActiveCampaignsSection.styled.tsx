@@ -28,7 +28,12 @@ export const ActiveCampaignsWrapper = styled(Grid)(() => ({
   },
 
   [theme.breakpoints.up('lg')]: {
-    gridTemplateColumns: '1fr 1fr 1fr 1fr',
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gridAutoRows: 'auto',
+    'div:first-of-type': {
+      gridRow: 'span 2',
+      gridColumn: 'span 2',
+    },
   },
 
   [theme.breakpoints.up(2000)]: {

@@ -9,7 +9,7 @@ import { visit } from 'unist-util-visit'
 import { Plugin } from 'unified'
 import { Root } from 'mdast'
 import TurndownService from 'turndown'
-import sanitizeHtml from 'sanitize-html'
+import DOMPurify, { addHook, removeHook } from 'isomorphic-dompurify'
 
 // convert `::youtube` directive into an iframe.
 const youtubePlugin: Plugin<[], Root> = () => {
@@ -60,6 +60,12 @@ export async function markdownToHtml(markdown: string) {
 
 export function htmlToMarkdown(html: string) {
   const turndownService = new TurndownService()
+  const allowedAttributes: Record<string, string[]> = {
+    a: ['href'],
+    img: ['src', 'alt', 'width', 'height'],
+    iframe: ['src'],
+  }
+  const allowedIframeHosts: string[] = ['www.youtube.com']
 
   turndownService.addRule('youtube', {
     filter: ['iframe'],
@@ -100,8 +106,22 @@ export function htmlToMarkdown(html: string) {
     },
   })
 
-  const sanitizedHtml = sanitizeHtml(html, {
-    allowedTags: [
+  addHook('uponSanitizeAttribute', (node, data) => {
+    const attr = allowedAttributes[node.tagName.toLocaleLowerCase()]
+    if (attr && attr.includes(data.attrName)) {
+      const isIframe = node.tagName === 'IFRAME'
+      if (!isIframe) {
+        data.forceKeepAttr = true
+      } else if (data.attrName !== 'src' && !allowedIframeHosts.includes(data.attrValue)) {
+        data.forceKeepAttr = false
+      }
+    } else {
+      data.forceKeepAttr = false
+    }
+  })
+
+  const sanitizedHtml = DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: [
       'p',
       'b',
       'i',
@@ -115,12 +135,6 @@ export function htmlToMarkdown(html: string) {
       'ol',
       'li',
     ],
-    allowedAttributes: {
-      a: ['href'],
-      img: ['src', 'alt', 'width', 'height'],
-      iframe: ['src'],
-    },
-    allowedIframeHostnames: ['www.youtube.com'],
   })
     // normalize to straight quotes. We will use smartyPants to convert to curly quotes later.
     .replace(/[\u2018\u2019]/g, "'")
@@ -132,5 +146,6 @@ export function htmlToMarkdown(html: string) {
     .replace(/(<(em)>)(.{0,3})(<\/(em)>)/g, '$3')
     .replace(/(<(strong)>)(.{0,3})(<\/(strong)>)/g, '$3')
 
+  removeHook('uponSanitizeAttribute')
   return turndownService.turndown(sanitizedHtml)
 }

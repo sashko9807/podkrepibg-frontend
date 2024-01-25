@@ -28,12 +28,14 @@ export default function CampaignsList({ campaignToShow }: Props) {
       container
       justifyContent="center"
       spacing={4}
+      component={'section'}
+      aria-label="Campaigns"
       sx={(theme) => ({
         width: `calc(100% + ${theme.spacing(1.5)})`,
         marginLeft: `-${theme.spacing(2.75)}`,
       })}>
       {campaigns?.map((campaign, index) => (
-        <Grid key={index} item xs={12} sm={6} lg={3}>
+        <Grid key={campaign.id} item xs={12} sm={6} lg={3} component={'article'}>
           <Box
             sx={{
               textAlign: 'center',
