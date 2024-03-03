@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import Script from 'next/script'
+
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'next-i18next'
 import { Box, BoxProps, Container, ContainerProps, Typography } from '@mui/material'
@@ -104,7 +104,6 @@ export default function Layout({
             />
           )}
         </Head>
-        <Script async src="https://www.googleoptimize.com/optimize.js?id=OPT-W89QK8X" />
         <Box pt={4} pb={disableOffset ? 0 : 10} {...boxProps}>
           {!mobileOpen ? (
             <AppNavBar navMenuToggle={navMenuToggle} />
