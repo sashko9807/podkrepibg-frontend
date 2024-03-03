@@ -7,10 +7,12 @@ import { Box, BoxProps, Container, ContainerProps, Typography } from '@mui/mater
 import Footer from 'components/client/layout/Footer/Footer'
 import Snackbar from 'components/client/layout/Snackbar'
 import { defaultOgImage } from 'common/routes'
-import DetailsModal from 'components/admin/modal/DetailsModal'
 
 import AppNavBar from './AppNavBar'
-import MobileNav from './nav/MobileNav/MobileNav'
+import dynamic from 'next/dynamic'
+import useMobile from 'common/hooks/useMobile'
+
+const MobileNav = dynamic(() => import('./nav/MobileNav/MobileNav'))
 
 const createPageTitle = (suffix: string, title?: string) => {
   if (title) {
@@ -54,6 +56,7 @@ export default function Layout({
   const { t, i18n } = useTranslation()
   const [mobileOpen, setMobileOpen] = useState(false)
   const navMenuToggle = () => setMobileOpen(!mobileOpen)
+  const { mobile } = useMobile()
   const pageTitle = useMemo(
     () => createPageTitle(t('meta.title'), metaTitle ?? title),
     [metaTitle, title],
@@ -105,11 +108,8 @@ export default function Layout({
           )}
         </Head>
         <Box pt={4} pb={disableOffset ? 0 : 10} {...boxProps}>
-          {!mobileOpen ? (
-            <AppNavBar navMenuToggle={navMenuToggle} />
-          ) : (
-            <MobileNav mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
-          )}
+          <AppNavBar navMenuToggle={navMenuToggle} />
+          {mobile && <MobileNav mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />}
           {!disableOffset && (
             <Box sx={(theme) => ({ ...theme.mixins.toolbar, mb: { xs: 0, md: 3, lg: 6 } })} />
           )}
@@ -131,7 +131,6 @@ export default function Layout({
           {children}
         </Box>
         <Snackbar />
-        <DetailsModal />
       </Container>
       {!hideFooter && <Footer />}
     </Container>
