@@ -38,17 +38,17 @@ import Layout from '../layout/Layout'
 const categories: {
   [key in CampaignTypeCategory]: { icon?: React.ReactElement }
 } = {
-  medical: { icon: <MedicalServices fontSize="small" /> },
-  charity: { icon: <VolunteerActivism fontSize="small" /> },
-  disasters: { icon: <BusAlert fontSize="small" /> },
-  education: { icon: <School fontSize="small" /> },
-  events: { icon: <TheaterComedy fontSize="small" /> },
-  environment: { icon: <Apartment fontSize="small" /> },
-  sport: { icon: <SportsTennis fontSize="small" /> },
-  art: { icon: <Brush fontSize="small" /> },
-  animals: { icon: <Pets fontSize="small" /> },
-  nature: { icon: <Forest fontSize="small" /> },
-  others: {},
+  medical: { icon: <MedicalServices fontSize="small" color="primary" /> },
+  charity: { icon: <VolunteerActivism fontSize="small" color="primary" /> },
+  disasters: { icon: <BusAlert fontSize="small" color="primary" /> },
+  education: { icon: <School fontSize="small" color="primary" /> },
+  events: { icon: <TheaterComedy fontSize="small" color="primary" /> },
+  environment: { icon: <Apartment fontSize="small" color="primary" /> },
+  sport: { icon: <SportsTennis fontSize="small" color="primary" /> },
+  art: { icon: <Brush fontSize="small" color="primary" /> },
+  animals: { icon: <Pets fontSize="small" color="primary" /> },
+  nature: { icon: <Forest fontSize="small" color="primary" /> },
+  others: { icon: <Category fontSize="small" color="primary" /> },
 }
 const PREFIX = 'CampaignNewsSection'
 const classes = {
@@ -60,14 +60,31 @@ const classes = {
   articleDescription: `${PREFIX}-articleDescription`,
   readMoreButton: `${PREFIX}-readMoreButton`,
   campaignTitle: `${PREFIX}-campaignTitle`,
+  innerContainer: `${PREFIX}-innerContainer`,
+  imageContainer: `${PREFIX}-imageContainer`,
 }
 
 const ArticleSection = styled(Grid)(({ theme }) => ({
-  paddingBottom: theme.spacing(2),
-
+  borderBottom: `1px solid`,
+  borderBottomColor: '#CCCCCC',
   [`& .${classes.articleDescription}`]: {
     [theme.breakpoints.down('sm')]: {
       display: 'none',
+    },
+  },
+
+  [`& .${classes.innerContainer}`]: {
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    paddingLeft: theme.spacing(1),
+  },
+
+  [`& .${classes.imageContainer}`]: {
+    aspectRatio: 1,
+    position: 'relative',
+
+    [theme.breakpoints.up('sm')]: {
+      aspectRatio: 16 / 9,
     },
   },
 
@@ -92,13 +109,23 @@ const ArticleSection = styled(Grid)(({ theme }) => ({
   },
 
   [`& .${classes.campaignTitle}`]: {
-    maxWidth: theme.spacing(70),
-    fontWeight: 700,
+    color: '#0098E3',
+    // fontSize: theme.typography.pxToRem(14),
+    // fontWeight: 400,
+    // [theme.breakpoints.up('sm')]: {
+    //   fontSize: theme.typography.pxToRem(16),
+    // },
   },
 
   [`& .${classes.articleHeader}`]: {
-    maxWidth: theme.spacing(70),
-    fontWeight: 700,
+    fontSize: theme.typography.pxToRem(18),
+    color: theme.palette.grey[900],
+    fontWeight: 400,
+
+    [theme.breakpoints.up('sm')]: {
+      fontSize: theme.typography.pxToRem(25),
+      color: theme.palette.grey[800],
+    },
 
     '&:hover': {
       textDecoration: 'underline',
@@ -127,7 +154,7 @@ const images = ['/img/fox.jpg', '/img/squirrel.jpg', '/img/wolf.jpg']
 type Props = {
   articles: CampaignNewsResponse[] | []
 }
-const StatusText = styled('span')(() => ({
+const StatusText = styled(Typography)(() => ({
   fontSize: theme.typography.pxToRem(14),
 }))
 const StatusLabel = styled(Typography)(() => ({
@@ -137,10 +164,7 @@ const StatusLabel = styled(Typography)(() => ({
 }))
 
 export default function CampaignNewsList({ articles }: Props) {
-  const isDesktop = useMediaQuery('only screen and (min-width : 830px)')
   const { t, i18n } = useTranslation()
-  const INITIAL_HEIGHT_LIMIT = 400
-  const [isExpanded, expandContent] = useShowMoreContent()
   const router = useRouter()
 
   return (
@@ -149,193 +173,130 @@ export default function CampaignNewsList({ articles }: Props) {
         // The next two lines should be uncommented finally
         // const documents = GetArticleDocuments(article.newsFiles)
         // const images = GetArticleGalleryPhotos(article.newsFiles)
-        const [, sanitizedDescription] = HTMLContentSeparator(article.description)
-        const {
-          data: campaign,
-          isLoading: isLoadingCampaignData,
-          isError: isErrorCampaignData,
-        } = useViewCampaignById(article.campaign.id)
-        if (isLoadingCampaignData || isErrorCampaignData) return <Layout />
-
-        const campaignImagesUrl = campaignListPictureUrl(campaign)
         return (
-          <Grid
-            container
-            key={article.id}
-            spacing={2}
-            sx={{
-              backgroundColor: index % 2 === 0 ? theme.palette.common.white : '#E3E3E3',
-              borderBottom: 1,
-              borderColor: index % 2 === 0 ? theme.palette.common.white : '#C4C4C4',
-              justifyContent: 'center',
-              padding: theme.spacing(0, 2),
-
-              [theme.breakpoints.up('sm')]: {
-                padding: theme.spacing(0, 5),
-              },
-            }}>
-            {/* The following should be uncommented finally 
-             {article.newsFiles.length > 0 && (
-            <Grid item sx={{ position: "relative", width: "300px" }} mt={1.5} md={3} xs={5}>
-              <Image
-                onClick={() => router.push(routes.campaigns.news.viewSingleArticle(article.slug))}
-                src={article.newsFiles[0].src}
-                alt={article.newsFiles[0].fileName}
-                style={{  objectFit: 'contain',
-                  cursor: 'pointer' }}
+          <ArticleSection item key={article.id}>
+            <Grid container item direction={'row'} className={classes.innerContainer} gap={2}>
+              <Grid item md={3} xs={5} className={classes.imageContainer}>
+                <Image
+                  src={images[index]}
+                  alt={images[index]}
+                  fill
+                  style={{ objectFit: 'cover' }}
                 />
-            </Grid>
-            )} */}
-
-            {/* The next Grid item should be deleted finally and it will be replaced by the above*/}
-            <Grid item sx={{ position: 'relative', width: '300px' }} mt={1.5} md={3} xs={5}>
-              {/* The next condition should be in force finally and the following should be uncommented
-              {article.newsFiles.length === 0 ? <Image src={campaignImagesUrl} alt={images[index]}
-                onClick={() => router.push(routes.campaigns.news.viewSingleArticle(article.slug))}
-                fill
-                style={{
-                  objectFit: 'contain',
-                  cursor: 'pointer'
-                }} /> : 
-                 */}
-              <Image
-                src={images[index]}
-                alt={images[index]}
-                onClick={() => router.push(routes.campaigns.news.viewSingleArticle(article.slug))}
-                fill
-                style={{
-                  objectFit: 'contain',
-                  cursor: 'pointer',
-                }}
-              />
-              {/* } */}
-            </Grid>
-            <Grid item md={9} xs={7} container>
-              <ArticleSection id={article.id}>
-                <Grid container rowGap={1}>
-                  <Grid container item direction={'column'}>
-                    <Typography
-                      sx={{
-                        fontSize: theme.typography.pxToRem(12),
-                      }}
-                      className={classes.campaignTitle}
-                      color="primary">
-                      {article.campaign.title}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontSize: theme.typography.pxToRem(16),
-                      }}
-                      className={classes.articleHeader}
-                      onClick={() =>
-                        router.push(routes.campaigns.news.viewSingleArticle(article.slug))
-                      }>
-                      {article.title}
-                    </Typography>
-                    <QuillStypeWrapper>
-                      <Typography
-                        component={'div'}
-                        className={classes.articleDescription}
-                        dangerouslySetInnerHTML={{
-                          __html: sanitizedDescription,
-                        }}
-                        sx={{ wordBreak: 'break-word' }}
-                      />
-                    </QuillStypeWrapper>
-                  </Grid>
+              </Grid>
+              <Grid
+                container
+                item
+                xs={6}
+                md={8}
+                justifyContent={'space-between'}
+                direction={'column'}>
+                <Grid item>
+                  <Typography
+                    sx={{ wordBreak: 'break-all', typography: { sm: 'body1', md: 'subtitle1' } }}
+                    className={classes.campaignTitle}
+                    variant="subtitle1"
+                    color="primary.dark">
+                    {article.campaign.title}
+                  </Typography>
+                  <Typography
+                    // variant="h5"
+                    className={classes.articleHeader}
+                    sx={{ wordBreak: 'break-all', typography: { xs: 'h5', sm: 'h3' } }}
+                    onClick={() =>
+                      router.push(routes.campaigns.news.viewSingleArticle(article.slug))
+                    }>
+                    {article.title}
+                  </Typography>
                 </Grid>
-                {isDesktop && (
-                  <>
-                    <Grid container item mt={1.5} mb={1.5}>
-                      <Grid item xs={3.9}>
-                        <StatusLabel variant="body2" display="inline" color="primary">
-                          {t('campaign-types:grid.category')}
-                        </StatusLabel>
-                        <StatusText>{article.campaign.campaignType.category}</StatusText>
-                      </Grid>
-                      <Grid item xs={3.9}>
+                <Grid
+                  container
+                  item
+                  direction={'column'}
+                  gap={1}
+                  sx={{ display: { xs: 'none', sm: 'flex' } }}>
+                  <Grid container item direction={'row'} columnSpacing={{ xs: 5, md: 9 }}>
+                    <Grid container item xs="auto">
+                      <StatusLabel variant="body2" display="inline" color="primary">
+                        {t('campaign-types:grid.category')}
+                      </StatusLabel>
+                      <StatusText sx={{ wordBreak: 'break-word', whiteSpace: 'pre-line' }}>
+                        {article.campaign.campaignType.category}
+                      </StatusText>
+                    </Grid>
+                    <Grid container item xs={'auto'}>
+                      <Grid item>
                         <StatusLabel variant="body2" display="inline" color="primary">
                           {t('campaigns:campaign.status')}
                         </StatusLabel>
+                      </Grid>
+                      <Grid item>
                         <StatusText>
                           {t(`campaigns:campaign-status.${article.campaign.state}`)}
                         </StatusText>
                       </Grid>
                     </Grid>
-                    <Grid container columnGap={12} className={classes.dateAndAuthorContainer}>
-                      <Grid container item gap={1} xs="auto">
-                        <AvTimerIcon color="primary" />
-                        <Typography className={classes.articlepublishedDate}>
-                          {formatDateString(article.publishedAt, i18n.language)} &nbsp;
-                          {dateToTime(article.publishedAt, i18n.language)}
-                        </Typography>
-                      </Grid>
-                      <Grid container item gap={1} xs="auto">
-                        <SupervisedUserCircleOutlinedIcon color="primary" />
-                        <Typography className={classes.articleAuthor}>{article.author}</Typography>
-                      </Grid>
+                  </Grid>
+                  <Grid
+                    container
+                    item
+                    direction={'row'}
+                    columnSpacing={{ xs: 5, md: 5 }}
+                    flexWrap={'wrap'}>
+                    <Grid container item xs={'auto'}>
+                      <AvTimerIcon color="primary" />
+                      <Typography variant="body2">
+                        {formatDateString(article.publishedAt, i18n.language)} &nbsp;
+                        {dateToTime(article.publishedAt, i18n.language)}
+                      </Typography>
                     </Grid>
-                  </>
-                )}
-                {getArticleHeight(article.id) > INITIAL_HEIGHT_LIMIT && (
-                  <Button
-                    key={article.id}
-                    className={classes.readMoreButton}
-                    onClick={() => {
-                      expandContent(article.id)
-                      scrollToTop(article.id)
-                    }}
-                    sx={{ background: 'transperent', width: '100%' }}>
-                    {!isExpanded[article.id]
-                      ? `${t('news:read-more')} >`
-                      : `${t('news:read-less')} <`}
-                  </Button>
-                )}
-              </ArticleSection>
-            </Grid>
-            {!isDesktop && (
-              <>
-                <Grid container columnGap={14} className={classes.dateAndAuthorContainer} mb={2}>
-                  <Grid container item gap={1} xs="auto" mb={0.5}>
+                    <Grid container item gap={1} xs="auto">
+                      <SupervisedUserCircleOutlinedIcon color="primary" sx={{ float: 'left' }} />
+                      <Typography className={classes.articleAuthor}>{article.author}</Typography>
+                    </Grid>
+                  </Grid>
+                </Grid>
+              </Grid>
+              <Grid
+                container
+                item
+                direction={'row'}
+                xs="auto"
+                gap={1}
+                sx={{ display: { xs: 'flex', sm: 'none' } }}>
+                <Grid container item direction={'column'} xs="auto">
+                  <Grid container item gap={1} xs="auto">
                     <AvTimerIcon color="primary" />
                     <Typography className={classes.articlepublishedDate}>
                       {formatDateString(article.publishedAt, i18n.language)} &nbsp;
                       {dateToTime(article.publishedAt, i18n.language)}
                     </Typography>
                   </Grid>
-                  <Grid container item gap={1} xs="auto" mb={0.5}>
+                  <Grid container item gap={1}>
                     <SupervisedUserCircleOutlinedIcon color="primary" />
                     <Typography className={classes.articleAuthor}>{article.author}</Typography>
                   </Grid>
-                  <Grid container item gap={1.5} xs="auto" mb={0.5}>
-                    <Grid item>
-                      {Object.values(CampaignTypeCategory).map((category) => {
-                        if (category === article.campaign.campaignType.category)
-                          return (
-                            <IconButton
-                              color="primary"
-                              key={article.campaign.campaignType.category}>
-                              {categories[article.campaign.campaignType.category].icon ?? (
-                                <Category fontSize="small" />
-                              )}
-                            </IconButton>
-                          )
-                      })}
+                </Grid>
+                <Grid container item direction={'row'} md="auto" gap={1}>
+                  <Grid container item xs="auto" gap={1}>
+                    <Grid container item gap={1} xs="auto">
+                      {
+                        categories[article.campaign.campaignType.category as CampaignTypeCategory]
+                          .icon
+                      }
                       <StatusText>{article.campaign.campaignType.category}</StatusText>
                     </Grid>
-                    <Grid item>
-                      <IconButton color="primary">
-                        <AnalyticsIcon fontSize="small" />
-                      </IconButton>
-                      <StatusText>
-                        {t(`campaigns:campaign-status.${article.campaign.state}`)}
-                      </StatusText>
-                    </Grid>
+                  </Grid>
+                  <Grid container item xs="auto" gap={1}>
+                    <AnalyticsIcon fontSize="small" color="primary" />
+                    <StatusText>
+                      {t(`campaigns:campaign-status.${article.campaign.state}`)}
+                    </StatusText>
                   </Grid>
                 </Grid>
-              </>
-            )}
-          </Grid>
+              </Grid>
+            </Grid>
+          </ArticleSection>
         )
       })}
     </>

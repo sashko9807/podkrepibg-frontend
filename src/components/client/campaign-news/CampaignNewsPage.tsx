@@ -78,7 +78,7 @@ export default function CampaignNewsPage({ page, slug = null }: Props) {
   return (
     <Root
       maxWidth={false}
-      style={{ padding: theme.spacing(5) }}
+      sx={{ px: { xs: 0, sm: theme.spacing(10) } }}
       prevPage={
         data?.pagination.prevPage
           ? `${baseUrl}${routes.campaigns.news.listNewsPaginated(data?.pagination.prevPage, slug)}`
@@ -89,30 +89,22 @@ export default function CampaignNewsPage({ page, slug = null }: Props) {
           ? `${baseUrl}${routes.campaigns.news.listNewsPaginated(data?.pagination.nextPage, slug)}`
           : undefined
       }>
-      <Grid>
-        <Grid
-          sx={{
-            padding: theme.spacing(0, 3),
-            margin: '0 auto',
-
-            [theme.breakpoints.up('sm')]: {
-              padding: theme.spacing(0, 5),
-            },
-
-            [theme.breakpoints.up('lg')]: {
-              maxWidth: '1280px',
-            },
-          }}>
+      <Grid container>
+        <Grid container item direction={'column'} md={12}>
           <Typography variant="h1" component="p" className={classes.title}>
             {t('news')}
           </Typography>
           <BreadcrumbWrapper crumb={breadcumbData} />
           <Divider orientation="horizontal" sx={{ marginBottom: theme.spacing(4) }} />
+          <Grid container justifyContent={'flex-end'}>
+            <Grid item justifyContent={'center'} direction={'column'} xs={12} sm={11.1}>
+              {data && data?.campaign.campaignNews.length > 0 && (
+                <CampaignNewsList articles={data.campaign.campaignNews} />
+              )}
+            </Grid>
+          </Grid>
         </Grid>
-        {data && data?.campaign.campaignNews.length > 0 && (
-          <CampaignNewsList articles={data.campaign.campaignNews} />
-        )}
-        <Grid>
+        <Grid container item justifyContent={'center'}>
           {data && data?.pagination.totalPages > 1 && (
             <Pagination
               count={data?.pagination.totalPages}
@@ -164,7 +156,7 @@ export default function CampaignNewsPage({ page, slug = null }: Props) {
               </Grid>
               <Grid>
                 <SubscribeButton onClick={() => setSubscribeOpen(true)} variant="contained">
-                  {t('campaigns:cta.subscribe-general-newsletter-button')}
+                  {t('campaigns:notifications.subscribe-general-newsletter-button')}
                 </SubscribeButton>
               </Grid>
             </Grid>
