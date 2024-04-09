@@ -60,8 +60,8 @@ export default function CampaignNewsPage({ page, slug = null }: Props) {
   ]
   if (slug && data) {
     breadcumbData.splice(1, 0, {
-      label: data.campaign.title,
-      url: routes.campaigns.viewCampaignBySlug(data.campaign.slug),
+      label: data.campaign.campaignNews[0].title,
+      url: routes.campaigns.viewCampaignBySlug(data.campaign.campaignNews[0].slug),
     })
   }
 

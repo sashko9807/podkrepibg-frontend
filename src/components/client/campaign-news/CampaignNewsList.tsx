@@ -1,6 +1,6 @@
 import { Button, Grid, Link, Typography } from '@mui/material'
 
-import { CampaignNewsResponse } from 'gql/campaign-news'
+import { CampaignNewsListResponse } from 'gql/campaign-news'
 
 import { styled } from '@mui/material/styles'
 import { dateToTime, formatDateString } from 'common/util/date'
@@ -11,13 +11,12 @@ import { useTranslation } from 'next-i18next'
 import Image from 'next/image'
 import { GetArticleDocuments, GetArticleGalleryPhotos } from 'common/util/newsFilesUrls'
 import { useShowMoreContent } from './hooks/useShowMoreContent'
-import { HTMLContentSeparator } from 'common/util/htmlUtils'
 import theme from 'common/theme'
-import { QuillStypeWrapper } from 'components/common/QuillStyleWrapper'
 import { scrollToTop } from './utils/scrollToTop'
 import { getArticleHeight } from './utils/getArticleHeight'
 
 import Gallery from 'components/common/Gallery'
+import { campaignListPictureUrl } from 'common/util/campaignImageUrls'
 
 const PREFIX = 'CampaignNewsSection'
 const classes = {
@@ -76,7 +75,7 @@ const ArticleSection = styled(Grid)(({ theme }) => ({
 }))
 
 type Props = {
-  articles: CampaignNewsResponse[] | []
+  articles: CampaignNewsListResponse[] | []
 }
 
 export default function CampaignNewsList({ articles }: Props) {
@@ -88,7 +87,8 @@ export default function CampaignNewsList({ articles }: Props) {
       {articles?.map((article, index: number) => {
         const documents = GetArticleDocuments(article.newsFiles)
         const images = GetArticleGalleryPhotos(article.newsFiles)
-        const [, sanitizedDescription] = HTMLContentSeparator(article.description)
+        const campaignCardImage = campaignListPictureUrl(article.campaign.campaignFiles)
+        const titleImage = images[0]?.src ?? campaignCardImage
         return (
           <Grid
             container
@@ -118,30 +118,10 @@ export default function CampaignNewsList({ articles }: Props) {
                   <Typography className={classes.articleAuthor}>{article.author}</Typography>
                 </Grid>
               </Grid>
-              <Grid
-                container
-                rowGap={1}
-                columnGap={4}
-                sx={{
-                  height:
-                    getArticleHeight(article.id) > INITIAL_HEIGHT_LIMIT && !isExpanded[article.id]
-                      ? INITIAL_HEIGHT_LIMIT
-                      : 'auto',
-                  overflow: 'hidden',
-                  maxWidth: 1200,
-                }}>
+              <Grid container rowGap={1} columnGap={4}>
                 <Grid container item direction={'column'} gap={1}>
                   <Typography className={classes.articleHeader}>{article.title}</Typography>
-                  <QuillStypeWrapper>
-                    <Typography
-                      component={'div'}
-                      className={classes.articleDescription}
-                      dangerouslySetInnerHTML={{
-                        __html: sanitizedDescription,
-                      }}
-                      sx={{ wordBreak: 'break-word' }}
-                    />
-                  </QuillStypeWrapper>
+                  <Image src={titleImage} alt="" width={500} height={500} />
                   <Grid container item direction={'column'} gap={0.5}>
                     {documents.map((file) => (
                       <Grid item key={file.id}>
