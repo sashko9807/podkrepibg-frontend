@@ -1,5 +1,5 @@
 import { Method } from 'axios'
-import { DonationStatus } from 'gql/donations.enums'
+import { PaymentStatus } from 'gql/donations.enums'
 import { StatisticsGroupBy } from 'components/client/campaigns/helpers/campaign.enums'
 import { FilterData, PaginationData, SortData } from 'gql/types'
 
@@ -109,6 +109,42 @@ export const endpoints = {
     getHourlyDonations: (id: string) =>
       <Endpoint>{ url: `statistics/hourly-donations/${id}`, method: 'GET' },
   },
+  payments: {
+    list: (
+      paymentId?: string,
+      campaignId?: string,
+      paginationData?: PaginationData,
+      filterData?: FilterData,
+      searchData?: string,
+    ) => {
+      const { pageIndex, pageSize } = (paginationData as PaginationData) || {}
+      const { status, paymentProvider, date, minAmount, maxAmount, sortBy } =
+        (filterData as FilterData) || {}
+      const { from, to } = date || {}
+
+      const urlParams = new URLSearchParams({
+        paymentId: `${paymentId ?? ''}`,
+        campaignId: `${campaignId ?? ''}`,
+        pageIndex: `${pageIndex}`,
+        pageSize: `${pageSize}`,
+        status: status,
+        provider: paymentProvider,
+        from: `${from}`,
+        to: `${to}`,
+        search: `${searchData}`,
+        sortBy: `${sortBy}`,
+        minAmount: `${minAmount ?? ''}`,
+        maxAmount: `${maxAmount ?? ''}`,
+      })
+      return <Endpoint>{
+        url: `/donation/payments?${urlParams}`,
+        method: 'GET',
+      }
+    },
+    getPayment: (id: string) => {
+      return <Endpoint>{ url: `/donation/payments/${id}`, method: 'GET' }
+    },
+  },
   donation: {
     prices: <Endpoint>{ url: '/donation/prices', method: 'GET' },
     singlePrices: <Endpoint>{ url: '/donation/prices/single', method: 'GET' },
@@ -116,33 +152,46 @@ export const endpoints = {
     createCheckoutSession: <Endpoint>{ url: '/donation/create-checkout-session', method: 'POST' },
     createPaymentIntent: <Endpoint>{ url: '/donation/create-payment-intent', method: 'POST' },
     createBankDonation: <Endpoint>{ url: '/donation/create-bank-payment', method: 'POST' },
+    synchronizeWithPayment: (id: string) =>
+      <Endpoint>{ url: `/donation/${id}/sync-with-payment`, method: 'PATCH' },
     refundStripePayment: (id: string) =>
       <Endpoint>{ url: `/donation/refund-stripe-payment/${id}`, method: 'POST' },
     invalidateStripePayment: (id: string) =>
       <Endpoint>{ url: `/donation/${id}/invalidate`, method: 'PATCH' },
     getDonation: (id: string) => <Endpoint>{ url: `/donation/${id}`, method: 'GET' },
     donationsList: (
+      paymentId?: string,
       campaignId?: string,
       paginationData?: PaginationData,
       filterData?: FilterData,
       searchData?: string,
     ) => {
       const { pageIndex, pageSize } = (paginationData as PaginationData) || {}
-      const { status, paymentProvider, date } = (filterData as FilterData) || {}
+      const { status, paymentProvider, date, minAmount, maxAmount, sortBy } =
+        (filterData as FilterData) || {}
       const { from, to } = date || {}
 
+      const urlParams = new URLSearchParams({
+        paymentId: `${paymentId ?? ''}`,
+        campaignId: `${campaignId ?? ''}`,
+        pageIndex: `${pageIndex}`,
+        pageSize: `${pageSize}`,
+        status: status,
+        provider: paymentProvider,
+        from: `${from}`,
+        to: `${to}`,
+        search: `${searchData}`,
+        sortBy: `${sortBy}`,
+        minAmount: `${minAmount ?? ''}`,
+        maxAmount: `${maxAmount ?? ''}`,
+      })
       return <Endpoint>{
-        url: `/donation/list?campaignId=${
-          campaignId ?? ''
-        }&pageindex=${pageIndex}&pagesize=${pageSize}&status=${status}&provider=${paymentProvider}&from=${from}&to=${to}&search=${searchData}&minAmount=${
-          filterData?.minAmount ?? ''
-        }&maxAmount=${filterData?.maxAmount ?? ''}&sortBy=${filterData?.sortBy ?? ''}`,
+        url: `/donation/list?${urlParams}`,
         method: 'GET',
       }
     },
-
     getDonations: (
-      status: DonationStatus,
+      status: PaymentStatus,
       campaignId?: string,
       pageindex?: number,
       pagesize?: number,

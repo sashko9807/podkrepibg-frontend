@@ -22,6 +22,7 @@ import { routes } from 'common/routes'
 
 import { useSendConfirmationEmail } from 'service/notification'
 import { SendConfirmationEmailResponse, SendConfirmationEmailInput } from 'gql/notification'
+import theme from 'common/theme'
 
 const PREFIX = 'GeneralSubscribeModal'
 
@@ -116,7 +117,11 @@ export default function RenderSubscribeModal({ setOpen }: ModalProps) {
             </Typography>
           </Grid>
           <Grid item xs={12} textAlign="center">
-            <EmailField label="auth:fields.email-descriptive" name="email" sx={{ width: '70%' }} />
+            <EmailField
+              label={t('auth:fields.email-descriptive')}
+              name="email"
+              sx={{ width: '70%' }}
+            />
           </Grid>
           <Grid item xs={12}>
             <AcceptNewsLetterField name="consent" />
@@ -162,7 +167,7 @@ export default function RenderSubscribeModal({ setOpen }: ModalProps) {
           }}>
           <CloseModalButton onClose={handleClose} />
           <React.Fragment>
-            <EmailIcon color="primary" sx={{ fontSize: '64px' }} />
+            <EmailIcon color="primary" sx={{ fontSize: theme.typography.pxToRem(64) }} />
             <DialogTitle style={{ textAlign: 'center', width: '100%' }}>
               {t('common:notifications.subscribe-title')}
             </DialogTitle>
@@ -175,10 +180,23 @@ export default function RenderSubscribeModal({ setOpen }: ModalProps) {
                       : t('common:notifications.subscribe-text-loggedUser')}
                   </Typography>
                 </Grid>
-                <Grid item xs={12} display="flex" justifyContent="space-evenly">
+                <Grid
+                  item
+                  xs={12}
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-evenly',
+                    flexFlow: 'column',
+                    gap: theme.spacing(2),
+                    alignItems: 'center',
+
+                    [theme.breakpoints.up('sm')]: {
+                      flexFlow: 'row',
+                    },
+                  }}>
                   <SubmitButton
                     type="button"
-                    sx={{ width: '40%' }}
+                    sx={{ minWidth: theme.spacing(25) }}
                     className={classes.subscribeBtn}
                     label={
                       status !== 'authenticated'
@@ -190,7 +208,7 @@ export default function RenderSubscribeModal({ setOpen }: ModalProps) {
                   />
                   <SubmitButton
                     type="button"
-                    sx={{ width: '40%' }}
+                    sx={{ minWidth: theme.spacing(25) }}
                     variant="outlined"
                     className={classes.subscribeBtn}
                     label={
@@ -223,7 +241,7 @@ export default function RenderSubscribeModal({ setOpen }: ModalProps) {
           <CloseModalButton onClose={handleClose} />
           {!isSuccess ? (
             <React.Fragment>
-              <EmailIcon color="primary" sx={{ fontSize: '64px' }} />
+              <EmailIcon color="primary" sx={{ fontSize: theme.typography.pxToRem(64) }} />
               <DialogTitle style={{ textAlign: 'center', width: '100%' }}>
                 {t('common:notifications.subscribe-title')}
               </DialogTitle>
@@ -236,7 +254,7 @@ export default function RenderSubscribeModal({ setOpen }: ModalProps) {
               style={{ textAlign: 'center', fontSize: 20, fontWeight: 600, paddingBottom: 6 }}>
               <CloseModalButton onClose={handleClose} />
               <React.Fragment>
-                <ThumbUpIcon sx={{ fontSize: '64px', color: '#03C03C' }} />
+                <ThumbUpIcon sx={{ fontSize: theme.typography.pxToRem(64), color: '#03C03C' }} />
                 <DialogTitle>
                   <Typography
                     variant="h5"

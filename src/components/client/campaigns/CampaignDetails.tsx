@@ -68,7 +68,7 @@ const StyledGrid = styled(Grid)(({ theme }) => ({
   },
 
   ['& .ql-editor']: {
-    fontSize: theme.spacing(2),
+    fontSize: theme.typography.pxToRem(16),
     fontWeight: 500,
     lineHeight: theme.spacing(4),
     paddingLeft: '0',
@@ -109,10 +109,10 @@ const StyledGrid = styled(Grid)(({ theme }) => ({
     },
   },
   [`& .${classes.financeSummary}`]: {
-    fontSize: `1.2rem`,
+    fontSize: theme.typography.pxToRem(19),
     [theme.breakpoints.up('sm')]: {
       marginLeft: theme.spacing(2),
-      fontSize: `1.3rem`,
+      fontSize: theme.typography.pxToRem(21),
     },
   },
 }))
@@ -267,7 +267,7 @@ const CampaignFinanceSummary = ({ campaign, expenses }: CampaignFinanceProps) =>
         <Tooltip
           enterTouchDelay={0}
           title={
-            'Дарения от служители или клиенти на компании, които имат вътрешни дарителски инициативи с партньорска интеграция към Подкрепи.бг. При такова дарение сумите се отразяват веднага в платформата като "гарантирани" от компанията и се превеждат веднъж в месеца като консолидирана сума към Подкрепи.бг с цел по-лесно управление'
+            'Дарения от служители или клиенти на компании, които имат вътрешни дарителски инициативи с партньорска интеграция към Подкрепи.бг. При такова дарение сумите се отразяват веднага в платформата като "гарантирани" от компанията и се превеждат веднъж в месеца като консолидирана сума към Подкрепи.бг с цел по-лесно управление.'
           }>
           <IconButton size="small" color="primary">
             <InfoOutlined fontSize="small" />

@@ -1,8 +1,9 @@
 import React, { useState } from 'react'
-import { UseQueryResult } from '@tanstack/react-query'
+import { UseQueryResult, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'next-i18next'
 import { Box, IconButton, Tooltip } from '@mui/material'
-import { Edit } from '@mui/icons-material'
+
+import { Autorenew, Edit } from '@mui/icons-material'
 import {
   DataGrid,
   GridColDef,
@@ -13,9 +14,6 @@ import { observer } from 'mobx-react'
 
 import { useDonationsList } from 'common/hooks/donation'
 
-import DetailsModal from '../modals/DetailsModal'
-import InvalidateModal from '../modals/InvalidateModal'
-import { ModalStore, RefundStore, InvalidateStore } from '../DonationsPage'
 import { getExactDateTime } from 'common/util/date'
 import { useRouter } from 'next/router'
 import { money } from 'common/util/money'
@@ -24,12 +22,13 @@ import { usePersonList } from 'common/hooks/person'
 import theme from 'common/theme'
 import RenderEditPersonCell from './RenderEditPersonCell'
 import { useStores } from '../../../../common/hooks/useStores'
-import RenderEditBillingEmailCell from './RenderEditBillingEmailCell'
-import RestoreIcon from '@mui/icons-material/Restore'
-import CancelIcon from '@mui/icons-material/Cancel'
-import RefundModal from '../modals/RefundModal'
-import { DonationStatus, PaymentProvider } from '../../../../gql/donations.enums'
+
+import Link from 'next/link'
 import { useSession } from 'next-auth/react'
+import { endpoints } from 'service/apiEndpoints'
+import { apiClient } from 'service/apiClient'
+import { authConfig } from 'service/restRequests'
+import { AlertStore } from 'stores/AlertStore'
 
 interface RenderCellProps {
   params: GridRenderCellParams
@@ -43,6 +42,7 @@ const addIconStyles = {
 }
 export default observer(function Grid() {
   const { donationStore } = useStores()
+  const queryClient = useQueryClient()
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
@@ -51,24 +51,55 @@ export default observer(function Grid() {
   const [focusedRowId, setFocusedRowId] = useState(null as string | null)
   const { t } = useTranslation()
   const router = useRouter()
-  const { isDetailsOpen } = ModalStore
-  const { isRefundOpen } = RefundStore
-  const {
-    isDeleteOpen,
-    setSelectedRecord: setInvalidateRecord,
-    showDelete: showInvalidate,
-  } = InvalidateStore
+
   const campaignId = router.query.campaignId as string | undefined
+  const paymentId = router.query.paymentId as string | undefined
+
+  const syncMutation = useMutation({
+    mutationFn: async (id: string) => {
+      return await apiClient.patch(
+        endpoints.donation.synchronizeWithPayment(id).url,
+        null,
+        authConfig(session?.accessToken),
+      )
+    },
+    onError: () => {
+      AlertStore.show(t('common:alerts.error'), 'error')
+      queryClient.invalidateQueries([
+        endpoints.donation.donationsList(
+          paymentId,
+          campaignId,
+          { pageIndex: paginationModel.page, pageSize: paginationModel.pageSize },
+          donationStore.donationFilters,
+          donationStore.donationSearch ?? '',
+        ).url,
+      ])
+    },
+    onSuccess: () => {
+      AlertStore.show(t('common:alerts.message-sent'), 'success')
+      queryClient.invalidateQueries([
+        endpoints.donation.donationsList(
+          paymentId,
+          campaignId,
+          { pageIndex: paginationModel.page, pageSize: paginationModel.pageSize },
+          donationStore.donationFilters,
+          donationStore.donationSearch ?? '',
+        ).url,
+      ])
+    },
+  })
   const { data: session } = useSession()
+
   const canEditFinancials = session?.user?.realm_access?.roles.includes(
     'account-edit-financials-requests',
   )
+
   const {
     data: { items: donations, total: allDonationsCount } = { items: [], total: 0 },
-    // error: donationHistoryError,
     isLoading: isDonationHistoryLoading,
     refetch,
   }: UseQueryResult<CampaignDonationHistoryResponse> = useDonationsList(
+    paymentId,
     campaignId,
     { pageIndex: paginationModel.page, pageSize: paginationModel.pageSize },
     donationStore.donationFilters,
@@ -112,34 +143,6 @@ export default observer(function Grid() {
     )
   }
 
-  const RenderBillingEmaiCell = ({ params }: RenderCellProps) => {
-    return (
-      <>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
-          {params.row.billingEmail}
-          {params.isEditable ? (
-            <Tooltip title={t('donations:cta.edit')}>
-              <Edit
-                sx={addIconStyles}
-                color="action"
-                fontSize="medium"
-                onClick={() => {
-                  if (focusedRowId) {
-                    params.api.startCellEditMode({ id: params.row.id, field: params.field })
-                  }
-                  params.api.getCellMode(params.row.id, params.field)
-                  setFocusedRowId(params.row.id)
-                }}
-              />
-            </Tooltip>
-          ) : (
-            <></>
-          )}
-        </Box>
-      </>
-    )
-  }
-
   const RenderMoneyCell = ({ params }: RenderCellProps) => {
     return <>{money(params.row.amount, params.row.currency)}</>
   }
@@ -150,18 +153,6 @@ export default observer(function Grid() {
     headerAlign: 'left',
   }
 
-  const { showRefund, setSelectedRecord } = RefundStore
-
-  function refundClickHandler(id: string) {
-    setSelectedRecord({ id })
-    showRefund()
-  }
-
-  function invalidateClickHandler(id: string) {
-    setInvalidateRecord({ id, name: '' })
-    showInvalidate()
-  }
-
   const columns: GridColDef[] = [
     {
       field: 'actions',
@@ -170,32 +161,74 @@ export default observer(function Grid() {
       width: 120,
       resizable: false,
       renderCell: (params: GridRenderCellParams) => {
-        if (!canEditFinancials || params.row?.status !== DonationStatus.succeeded) {
+        if (!canEditFinancials) {
           return ''
         }
 
         return (
           <>
-            {params.row.provider === PaymentProvider.stripe && (
-              <Tooltip title={t('donations:refund.icon')}>
-                <IconButton
-                  size="small"
-                  color="primary"
-                  onClick={() => refundClickHandler(params.row.id)}>
-                  <RestoreIcon />
-                </IconButton>
-              </Tooltip>
-            )}
-            <Tooltip title={t('donations:invalidate.icon')}>
+            <Tooltip title={t('Синхронизиране на дарение с плащане')}>
               <IconButton
                 size="small"
                 color="primary"
-                onClick={() => invalidateClickHandler(params.row.id)}>
-                <CancelIcon />
+                onClick={() => syncMutation.mutate(params.row.id)}>
+                <Autorenew color="primary" />
               </IconButton>
             </Tooltip>
           </>
         )
+      },
+    },
+    {
+      field: 'paymentId',
+      //TODO:Ttranslate
+      headerName: 'Плащане номер',
+      width: 150,
+      renderCell: (params: GridRenderCellParams) => {
+        return (
+          <Link href={`/admin/payments?id=${params.row.paymentId}`}>{params.row.paymentId}</Link>
+        )
+      },
+    },
+    {
+      field: 'payment.status',
+      //TODO:Ttranslate
+      headerName: 'Статус на плащане',
+      renderCell(params) {
+        return params.row.payment?.status
+      },
+    },
+    {
+      field: 'payment.provider',
+      //TODO:Ttranslate
+      headerName: 'Разплащателна система',
+      renderCell(params) {
+        return params.row.payment?.provider
+      },
+    },
+    {
+      field: 'amount',
+      headerName: t('donations:amount'),
+      renderCell: (params: GridRenderCellParams) => {
+        return <RenderMoneyCell params={params} />
+      },
+    },
+    {
+      field: 'payment.billingName',
+      //TODO:Ttranslate
+      headerName: 'billingName',
+      width: 250,
+      renderCell(params) {
+        return params.row.payment?.billingName
+      },
+    },
+    {
+      field: 'payment.billingEmail',
+      //TODO:Ttranslate
+      headerName: 'billingEmail',
+      width: 300,
+      renderCell(params) {
+        return params.row.payment?.billingEmail
       },
     },
     {
@@ -208,21 +241,13 @@ export default observer(function Grid() {
       },
     },
     {
-      field: 'status',
-      headerName: t('donations:status'),
-    },
-    {
-      field: 'amount',
-      headerName: t('donations:amount'),
-      renderCell: (params: GridRenderCellParams) => {
-        return <RenderMoneyCell params={params} />
-      },
-    },
-    {
       field: 'currency',
       headerName: t('donations:currency'),
       ...commonProps,
       width: 100,
+      renderCell(params) {
+        return params.row.payment?.currency
+      },
     },
     {
       field: 'person',
@@ -238,26 +263,6 @@ export default observer(function Grid() {
       },
     },
     {
-      field: 'billingName',
-      headerName: 'Billing Name',
-      width: 250,
-    },
-    {
-      field: 'billingEmail',
-      headerName: 'Billing Email',
-      width: 300,
-      editable: true,
-      renderCell: (params: GridRenderCellParams) => {
-        return <RenderBillingEmaiCell params={params} />
-      },
-
-      renderEditCell: (params: GridRenderEditCellParams) => {
-        return (
-          <RenderEditBillingEmailCell params={params} personList={personList} onUpdate={refetch} />
-        )
-      },
-    },
-    {
       field: 'id',
       headerName: 'ID',
       width: 320,
@@ -265,12 +270,6 @@ export default observer(function Grid() {
     {
       field: 'type',
       headerName: t('donations:type'),
-    },
-    {
-      field: 'provider',
-      headerName: t('donations:provider'),
-      ...commonProps,
-      width: 100,
     },
     {
       field: 'targetVaultId',
@@ -316,9 +315,6 @@ export default observer(function Grid() {
       </Box>
 
       {/* making sure we don't sent requests to the API when not needed */}
-      {isDetailsOpen && <DetailsModal />}
-      {isRefundOpen && <RefundModal />}
-      {isDeleteOpen && <InvalidateModal onUpdate={refetch} />}
     </>
   )
 })

@@ -132,8 +132,10 @@ const StatusLabel = styled(Typography)(() => ({
 }))
 
 export default function CampaignNewsList({ articles }: Props) {
-  const { t, i18n } = useTranslation()
-  const INITIAL_HEIGHT_LIMIT = 400
+  const { t, i18n } = useTranslation('news')
+
+  const LINE_HEIGHT = theme.typography.body1.lineHeight
+  const INITIAL_HEIGHT_LIMIT = 400 * Number(LINE_HEIGHT)
   const [isExpanded, expandContent] = useShowMoreContent()
   const router = useRouter()
   return (

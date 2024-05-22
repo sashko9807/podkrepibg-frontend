@@ -33,6 +33,8 @@ import {
 } from 'gql/user-registration'
 import RegisterSuccess from './RegisterSuccess'
 
+import theme from 'common/theme'
+
 const providerIcons = {
   google: <Google style={{ width: 43.55, height: 43.55 }} />,
 }
@@ -62,7 +64,7 @@ export default function RegisterPage({ providers }: RegisterPageProps) {
 
       // Register in Keycloak
       const registerResponse = await register(values)
-      console.log(registerResponse)
+
       if (registerResponse.data.data?.errorMessage) {
         AlertStore.show(t('auth:alerts.duplicate-email'), 'error')
         return
@@ -146,7 +148,7 @@ export default function RegisterPage({ providers }: RegisterPageProps) {
             <Divider
               sx={{
                 py: 3,
-                fontSize: 16,
+                fontSize: theme.typography.pxToRem(16),
                 textTransform: 'uppercase',
                 color: '#444444',
                 ':before': {

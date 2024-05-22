@@ -1,31 +1,33 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { useTranslation } from 'next-i18next'
 
-import { Dialog, Typography, DialogTitle, DialogContent, Grid, CardContent } from '@mui/material'
+import {
+  Dialog,
+  Typography,
+  DialogTitle,
+  DialogContent,
+  Grid,
+  CardContent,
+  CircularProgress,
+} from '@mui/material'
 import { useRefundStripeDonation } from 'service/donation'
 import { AlertStore } from 'stores/AlertStore'
 import { UseQueryResult, useMutation } from '@tanstack/react-query'
 import SubmitButton from 'components/common/form/SubmitButton'
-import { DonationResponse, StripeRefundRequest } from 'gql/donations'
+import { StripeRefundRequest, TPaymentResponse } from 'gql/donations'
 import CloseModalButton from 'components/common/CloseModalButton'
-import { useDonation } from 'common/hooks/donation'
+import { useGetPayment } from 'common/hooks/donation'
 import { observer } from 'mobx-react'
-import { RefundStore } from '../DonationsPage'
+import { RefundStore } from '../PaymentsPage'
 import GenericForm from 'components/common/form/GenericForm'
 import { fromMoney } from 'common/util/money'
 
 export default observer(function RefundModal() {
   const { t } = useTranslation('donations')
   const { isRefundOpen, hideRefund, selectedRecord } = RefundStore
-  const { data }: UseQueryResult<DonationResponse> = useDonation(selectedRecord.id)
-
-  const initialValues: StripeRefundRequest = {
-    extPaymentIntentId: '',
-  }
-
-  if (data) {
-    initialValues.extPaymentIntentId = data.extPaymentIntentId
-  }
+  const { data, isLoading, isError }: UseQueryResult<TPaymentResponse> = useGetPayment(
+    selectedRecord.id,
+  )
 
   const refundMutation = useMutation({
     mutationFn: useRefundStripeDonation(),
@@ -35,15 +37,25 @@ export default observer(function RefundModal() {
       hideRefund()
     },
   })
-  const [loading, setLoading] = useState(false)
+
+  if (isLoading) {
+    return (
+      <Dialog open={true}>
+        <CircularProgress />
+      </Dialog>
+    )
+  }
+  if (isError) {
+    AlertStore.show(t('alerts.error'), 'error')
+    return
+  }
+
+  const initialValues: StripeRefundRequest = {
+    extPaymentIntentId: data.extPaymentIntentId,
+  }
 
   async function onSubmit(values: StripeRefundRequest) {
-    setLoading(true)
-    try {
-      await refundMutation.mutateAsync(values.extPaymentIntentId)
-    } finally {
-      setLoading(false)
-    }
+    refundMutation.mutate(values.extPaymentIntentId)
   }
 
   return (
@@ -80,7 +92,11 @@ export default observer(function RefundModal() {
                 {t('refund.email')} {data?.billingEmail}
               </Typography>
               <Grid item xs={12} marginTop={3}>
-                <SubmitButton fullWidth label={t('refund.confirm-button')} loading={loading} />
+                <SubmitButton
+                  fullWidth
+                  label={t('refund.confirm-button')}
+                  loading={refundMutation.isLoading}
+                />
               </Grid>
             </CardContent>
           </GenericForm>

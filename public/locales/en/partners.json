@@ -8,9 +8,10 @@
   "sections": {
     "hosting": "Hosting Partner",
     "video": "Video Partners",
-    "media": "Media Partner",
+    "media": "Media Partners",
     "tech": "Technology Partners",
     "marketing": "Marketing / PR partners",
+    "UXAndDesign": "UX and design partner",
     "organizations": "Organizations / Organizers"
   },
   "guarants": {

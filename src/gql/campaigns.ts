@@ -2,11 +2,11 @@ import { UUID } from './types'
 import type { CampaignFileRole } from 'components/common/campaign-file/roles'
 import type { CampaignTypeCategory } from 'components/common/campaign-types/categories'
 import { Currency } from './currency'
-import { PaymentProvider } from './donations.enums'
 import { CampaignState } from 'components/client/campaigns/helpers/campaign.enums'
 import { BeneficiaryType } from '../components/admin/beneficiary/BeneficiaryTypes'
 import { VaultResponse } from './vault'
 import { CampaignNewsResponse } from './campaign-news'
+import { TPaymentResponse } from './donations'
 
 export type CampaignType = {
   id: UUID
@@ -99,16 +99,33 @@ export type CampaignResponse = BaseCampaignResponse & {
     id: UUID
     type: BeneficiaryType
     publicData: string
-    person: { id: UUID; firstName: string; lastName: string }
+    person: {
+      id: UUID
+      firstName: string
+      lastName: string
+      company: { id: string; companyName: string }
+    }
     company: { id: UUID; companyName: string }
   }
   coordinator: {
     id: UUID
-    person: { id: UUID; firstName: string; lastName: string; email: string }
+    person: {
+      id: UUID
+      firstName: string
+      lastName: string
+      email: string
+      company: { id: string; companyName: string }
+    }
   }
   organizer?: {
     id: UUID
-    person: { id: UUID; firstName: string; lastName: string; email: string }
+    person: {
+      id: UUID
+      firstName: string
+      lastName: string
+      email: string
+      company: { id: string; companyName: string }
+    }
   }
   campaignFiles: CampaignFile[] | []
   vaults?: VaultResponse[]
@@ -178,12 +195,8 @@ export type CampaignUploadImage = {
 export type CampaignDonation = {
   id: UUID
   type: string
-  status: string
-  provider: PaymentProvider
+  payment: TPaymentResponse
   targetVaultId: UUID
-  extCustomerId: UUID
-  extPaymentIntentId: UUID
-  extPaymentMethodId: UUID
   createdAt: string
   updatedAt: string
   amount: number

@@ -8,7 +8,7 @@ import theme from '../../../common/theme'
 export const SectionTitle = styled(Typography)(() => ({
   fontSize: theme.typography.pxToRem(24),
   textAlign: 'center',
-  paddingBottom: theme.spacing(11.5),
+  paddingBottom: theme.spacing(5),
 }))
 
 export const StyledGrid = styled(Grid)(() => ({
@@ -49,10 +49,14 @@ export const StyledArrow = styled(Image)(() => ({
   },
 
   '&.slick-prev': {
-    left: theme.spacing(-0.7),
+    left: theme.spacing(-4),
+    width: theme.spacing(4),
+    height: theme.spacing(3),
   },
 
   '&.slick-next': {
-    right: theme.spacing(-0.7),
+    right: theme.spacing(-4),
+    width: theme.spacing(4),
+    height: theme.spacing(3),
   },
 }))
