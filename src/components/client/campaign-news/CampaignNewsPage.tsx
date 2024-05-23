@@ -26,7 +26,7 @@ import {
   SubscribeHeading,
 } from '../index/sections/PlatformStatisticsSection/PlatformStatisticsSection.styled'
 
-const CampaignNewsList = dynamic(() => import('./CampaignNewsList'), { ssr: false })
+import CampaignNewsList from './CampaignNewsList'
 
 const PREFIX = 'CampaignsNewsPage'
 
@@ -77,7 +77,11 @@ export default function CampaignNewsPage({ page, slug = null }: Props) {
   return (
     <Root
       maxWidth={false}
-      style={{ padding: theme.spacing(5) }}
+      disableOffset
+      sx={{
+        padding: { xs: 0, md: theme.spacing(10) },
+        marginTop: { xs: theme.spacing(5), sm: theme.spacing(10), md: 0 },
+      }}
       prevPage={
         data?.pagination.prevPage
           ? `${baseUrl}${routes.campaigns.news.listNewsPaginated(data?.pagination.prevPage, slug)}`
@@ -88,48 +92,49 @@ export default function CampaignNewsPage({ page, slug = null }: Props) {
           ? `${baseUrl}${routes.campaigns.news.listNewsPaginated(data?.pagination.nextPage, slug)}`
           : undefined
       }>
-      <Grid>
-        <Grid
-          sx={{
-            padding: theme.spacing(0, 3),
-            margin: '0 auto',
-
-            [theme.breakpoints.up('sm')]: {
-              padding: theme.spacing(0, 5),
-            },
-
-            [theme.breakpoints.up('lg')]: {
-              maxWidth: '1280px',
-            },
-          }}>
-          <Typography variant="h1" component="p" className={classes.title}>
-            {t('news')}
-          </Typography>
-          <BreadcrumbWrapper crumb={breadcumbData} />
+      <Grid container direction={'column'} sx={{ padding: 0, maxWidth: 1172 }}>
+        <Grid container item direction={'column'} md={12} gap={2}>
+          <Grid item px={{ xs: 2 }}>
+            <Typography variant="h1" component="h1" className={classes.title}>
+              {t('news')}
+            </Typography>
+            <BreadcrumbWrapper crumb={breadcumbData} />
+          </Grid>
           <Divider orientation="horizontal" sx={{ marginBottom: theme.spacing(4) }} />
         </Grid>
-        {data && data?.campaign.campaignNews.length > 0 && (
-          <CampaignNewsList articles={data.campaign.campaignNews} />
-        )}
-        <Grid>
-          {data && data?.pagination.totalPages > 1 && (
-            <Pagination
-              count={data?.pagination.totalPages}
-              page={data?.pagination.currentPage}
-              sx={{ ul: { justifyContent: 'center' }, marginTop: theme.spacing(6) }}
-              renderItem={(item) => {
-                if (item.disabled || !item.page) {
-                  return <PaginationItem {...item} />
-                }
-                return (
-                  <Link href={routes.campaigns.news.listNewsPaginated(item.page, slug)} passHref>
-                    <PaginationItem {...item} />
-                  </Link>
-                )
-              }}
-            />
-          )}
+        <Grid container justifyContent={'flex-end'}>
+          <Grid
+            item
+            justifyContent={'center'}
+            direction={'column'}
+            xs={12}
+            sm={11.1}
+            sx={{ maxWidth: 1079 }}
+            component={'section'}>
+            {data && data?.campaign.campaignNews.length > 0 && (
+              <CampaignNewsList articles={data.campaign.campaignNews} />
+            )}
+          </Grid>
         </Grid>
+      </Grid>
+      <Grid container item justifyContent={'center'}>
+        {data && data?.pagination.totalPages > 1 && (
+          <Pagination
+            count={data?.pagination.totalPages}
+            page={data?.pagination.currentPage}
+            sx={{ ul: { justifyContent: 'center' }, marginTop: theme.spacing(6) }}
+            renderItem={(item) => {
+              if (item.disabled || !item.page) {
+                return <PaginationItem {...item} />
+              }
+              return (
+                <Link href={routes.campaigns.news.listNewsPaginated(item.page, slug)} passHref>
+                  <PaginationItem {...item} />
+                </Link>
+              )
+            }}
+          />
+        )}
       </Grid>
       <Grid item>
         <Card

@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { useRouter } from 'next/router'
 import Image from 'next/image'
 import { CampaignNewsListResponse } from 'gql/campaign-news'
-import { Button, Grid, Typography, IconButton } from '@mui/material'
+import { Button, Grid, Typography, IconButton, GridProps } from '@mui/material'
 import { styled } from '@mui/material/styles'
 import AvTimerIcon from '@mui/icons-material/AvTimer'
 import SupervisedUserCircleOutlinedIcon from '@mui/icons-material/SupervisedUserCircleOutlined'
@@ -22,28 +22,25 @@ import {
 } from '@mui/icons-material'
 import theme from 'common/theme'
 import { routes } from 'common/routes'
-import { campaignListPictureUrl } from 'common/util/campaignImageUrls'
+
 import { dateToTime, formatDateString } from 'common/util/date'
-import { GetArticleDocuments, GetArticleGalleryPhotos } from 'common/util/newsFilesUrls'
 import { CampaignTypeCategory } from 'components/common/campaign-types/categories'
-import { useShowMoreContent } from './hooks/useShowMoreContent'
-import { scrollToTop } from './utils/scrollToTop'
-import { getArticleHeight } from './utils/getArticleHeight'
+import Link from 'next/link'
 
 const categories: {
   [key in CampaignTypeCategory]: { icon?: React.ReactElement }
 } = {
-  medical: { icon: <MedicalServices fontSize="small" /> },
-  charity: { icon: <VolunteerActivism fontSize="small" /> },
-  disasters: { icon: <BusAlert fontSize="small" /> },
-  education: { icon: <School fontSize="small" /> },
-  events: { icon: <TheaterComedy fontSize="small" /> },
-  environment: { icon: <Apartment fontSize="small" /> },
-  sport: { icon: <SportsTennis fontSize="small" /> },
-  art: { icon: <Brush fontSize="small" /> },
-  animals: { icon: <Pets fontSize="small" /> },
-  nature: { icon: <Forest fontSize="small" /> },
-  others: {},
+  medical: { icon: <MedicalServices fontSize="small" color="primary" /> },
+  charity: { icon: <VolunteerActivism fontSize="small" color="primary" /> },
+  disasters: { icon: <BusAlert fontSize="small" color="primary" /> },
+  education: { icon: <School fontSize="small" color="primary" /> },
+  events: { icon: <TheaterComedy fontSize="small" color="primary" /> },
+  environment: { icon: <Apartment fontSize="small" color="primary" /> },
+  sport: { icon: <SportsTennis fontSize="small" color="primary" /> },
+  art: { icon: <Brush fontSize="small" color="primary" /> },
+  animals: { icon: <Pets fontSize="small" color="primary" /> },
+  nature: { icon: <Forest fontSize="small" color="primary" /> },
+  others: { icon: <Category fontSize="small" color="primary" /> },
 }
 const PREFIX = 'CampaignNewsSection'
 const classes = {
@@ -55,14 +52,36 @@ const classes = {
   articleDescription: `${PREFIX}-articleDescription`,
   readMoreButton: `${PREFIX}-readMoreButton`,
   campaignTitle: `${PREFIX}-campaignTitle`,
+  innerContainer: `${PREFIX}-innerContainer`,
+  imageContainer: `${PREFIX}-imageContainer`,
+  newsSummaryDekstop: `${PREFIX}-newsSummary--desktop`,
+  newsSummaryMobile: `${PREFIX}-newsSummary--mobile`,
 }
 
-const ArticleSection = styled(Grid)(({ theme }) => ({
-  paddingBottom: theme.spacing(2),
+const ArticleSection = styled(Grid)<GridProps>(({ theme }) => ({
+  borderBottom: `1px solid`,
+  borderBottomColor: '#CCCCCC',
   display: 'grid',
   [`& .${classes.articleDescription}`]: {
     [theme.breakpoints.down('sm')]: {
       display: 'none',
+    },
+  },
+
+  [`& .${classes.innerContainer}`]: {
+    paddingTop: theme.spacing(2),
+    paddingBottom: theme.spacing(2),
+    paddingLeft: theme.spacing(1),
+  },
+
+  [`& .${classes.imageContainer}`]: {
+    aspectRatio: 1,
+    position: 'relative',
+    maxHeight: 125,
+
+    [theme.breakpoints.up('sm')]: {
+      aspectRatio: 16 / 9,
+      maxHeight: '100%',
     },
   },
 
@@ -87,13 +106,20 @@ const ArticleSection = styled(Grid)(({ theme }) => ({
   },
 
   [`& .${classes.campaignTitle}`]: {
-    maxWidth: theme.spacing(70),
-    fontWeight: 700,
+    color: '#0098E3',
+    fontWeight: 400,
   },
 
   [`& .${classes.articleHeader}`]: {
-    maxWidth: theme.spacing(70),
-    fontWeight: 700,
+    fontSize: theme.typography.pxToRem(18),
+    color: theme.palette.grey[900],
+    fontWeight: 400,
+    textDecoration: 'none',
+
+    [theme.breakpoints.up('sm')]: {
+      fontSize: theme.typography.pxToRem(25),
+      color: theme.palette.grey[800],
+    },
 
     '&:hover': {
       textDecoration: 'underline',
@@ -103,6 +129,20 @@ const ArticleSection = styled(Grid)(({ theme }) => ({
 
   [`& .${classes.dateAndAuthorContainer}`]: {
     marginBottom: theme.spacing(2),
+  },
+
+  [`& .${classes.newsSummaryMobile}`]: {
+    display: 'flex',
+    [theme.breakpoints.up(751)]: {
+      display: 'none',
+    },
+  },
+
+  [`& .${classes.newsSummaryDekstop}`]: {
+    display: 'none',
+    [theme.breakpoints.up(751)]: {
+      display: 'flex',
+    },
   },
 
   [`& .${classes.readMoreButton}`]: {
@@ -122,7 +162,7 @@ const images = ['/img/fox.jpg', '/img/squirrel.jpg', '/img/wolf.jpg']
 type Props = {
   articles: CampaignNewsListResponse[] | []
 }
-const StatusText = styled('span')(() => ({
+const StatusText = styled(Typography)(() => ({
   fontSize: theme.typography.pxToRem(14),
 }))
 const StatusLabel = styled(Typography)(() => ({
@@ -134,9 +174,6 @@ const StatusLabel = styled(Typography)(() => ({
 export default function CampaignNewsList({ articles }: Props) {
   const { t, i18n } = useTranslation('news')
 
-  const LINE_HEIGHT = theme.typography.body1.lineHeight
-  const INITIAL_HEIGHT_LIMIT = 400 * Number(LINE_HEIGHT)
-  const [isExpanded, expandContent] = useShowMoreContent()
   const router = useRouter()
   return (
     <>
@@ -144,184 +181,142 @@ export default function CampaignNewsList({ articles }: Props) {
         // The next two lines should be uncommented finally
         // const documents = GetArticleDocuments(article.newsFiles)
         // const images = GetArticleGalleryPhotos(article.newsFiles)
-        const campaignCardImage = campaignListPictureUrl(article.campaign.campaignFiles)
-        const titleImage = images[0] ?? campaignCardImage
-        const campaignImagesUrl = campaignListPictureUrl(article.campaign.campaignFiles)
         return (
-          <Grid
-            container
-            key={article.id}
-            sx={{
-              borderBottom: 1,
-              borderColor: '#C4C4C4',
-              justifyContent: 'center',
-              padding: theme.spacing(0, 2),
-
-              [theme.breakpoints.up('sm')]: {
-                padding: theme.spacing(1, 5),
-              },
-            }}>
-            {/* The following should be uncommented finally 
-             {article.newsFiles.length > 0 && (
-            <Grid item sx={{ position: "relative", width: "200px" }}>
-              <Image
-                onClick={() => router.push(routes.campaigns.news.viewSingleArticle(article.slug))}
-                src={article.newsFiles[0].src}
-                alt={article.newsFiles[0].fileName}
-                style={{  objectFit: 'contain',
-                  cursor: 'pointer' }}
-                />
-            </Grid>
-            )} */}
-
-            <Grid item container columnGap={2}>
-              {/* The next Grid item should be deleted finally and it will be replaced by the above*/}
-              <Grid item md={3} xs={5}>
-                {/* The next condition should be in force finally and the following should be uncommented
-              {article.newsFiles.length === 0 ? <Image src={campaignImagesUrl} alt={images[index]}
-                onClick={() => router.push(routes.campaigns.news.viewSingleArticle(article.slug))}
-                fill
-                style={{
-                  objectFit: 'contain',
-                  cursor: 'pointer'
-                }} /> : 
-                 */}
-                <Image
-                  width={100}
-                  height={100}
-                  src={images[index]}
-                  alt={images[index]}
-                  onClick={() => router.push(routes.campaigns.news.viewSingleArticle(article.slug))}
-                  style={{
-                    position: 'relative',
-                    objectFit: 'contain',
-                    cursor: 'pointer',
-                  }}
-                />
-                {/* } */}
+          <ArticleSection item key={article.id} component="article" padding={1}>
+            <Grid container item direction={'row'} className={classes.innerContainer} gap={2}>
+              <Grid item md={3} xs={5} className={classes.imageContainer}>
+                <Image src={images[index]} alt="" fill aria-hidden style={{ objectFit: 'cover' }} />
               </Grid>
-              <Grid item md={6} xs={6}>
-                <ArticleSection id={article.id}>
-                  <Grid container rowGap={1}>
-                    <Grid container item direction={'column'}>
-                      <Typography
-                        sx={{
-                          fontSize: {
-                            xs: theme.typography.pxToRem(10),
-                            sm: theme.typography.pxToRem(12),
-                          },
-                        }}
-                        className={classes.campaignTitle}
-                        color="primary">
-                        {article.campaign.title}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: {
-                            xs: theme.typography.pxToRem(12),
-                            sm: theme.typography.pxToRem(16),
-                          },
-                        }}
-                        className={classes.articleHeader}
-                        onClick={() =>
-                          router.push(routes.campaigns.news.viewSingleArticle(article.slug))
-                        }>
-                        {article.title}
+              <Grid
+                container
+                item
+                xs={6}
+                md={8}
+                justifyContent={'space-between'}
+                direction={'column'}>
+                <Grid item component={'header'}>
+                  <Typography
+                    component={'p'}
+                    sx={{ wordBreak: 'break-all', typography: { sm: 'body1', md: 'subtitle1' } }}
+                    className={classes.campaignTitle}
+                    variant="subtitle1"
+                    color="primary.dark">
+                    {article.campaign.title}
+                  </Typography>
+                  <Typography
+                    component={'h2'}
+                    // tabIndex={0}
+                    className={classes.articleHeader}
+                    sx={{ wordBreak: 'break-all', typography: { xs: 'h5', sm: 'h3' } }}
+                    onClick={() =>
+                      router.push(routes.campaigns.news.viewSingleArticle(article.slug))
+                    }>
+                    <Link
+                      href={routes.campaigns.news.viewSingleArticle(article.slug)}
+                      style={{ textDecoration: 'none', color: 'inherit' }}>
+                      {article.title}
+                    </Link>
+                  </Typography>
+                </Grid>
+                <Grid
+                  container
+                  item
+                  direction={'row'}
+                  gap={{ xs: 2, md: 5 }}
+                  className={classes.newsSummaryDekstop}>
+                  <Grid
+                    container
+                    item
+                    direction={'column'}
+                    columnSpacing={{ xs: 5, md: 10 }}
+                    xs="auto">
+                    <Grid container item>
+                      <StatusLabel variant="body2" display="inline" color="primary">
+                        {t('campaign-types:grid.category')}
+                      </StatusLabel>
+                      <StatusText sx={{ wordBreak: 'break-word', whiteSpace: 'pre-line' }}>
+                        {article.campaign.campaignType.category}
+                      </StatusText>
+                    </Grid>
+                    <Grid container item>
+                      <AvTimerIcon color="primary" aria-label="Published at" />
+                      <Typography variant="body2">
+                        {formatDateString(article.publishedAt, i18n.language)} &nbsp;
+                        {dateToTime(article.publishedAt, i18n.language)}
                       </Typography>
                     </Grid>
                   </Grid>
-                  <Grid item container alignSelf="end" sx={{ display: { xs: 'none', sm: 'flex' } }}>
-                    <Grid item container mt={1.5} mb={1.5}>
-                      <Grid item xs={3.9} md={5}>
-                        <StatusLabel variant="body2" display="inline" color="primary">
-                          {t('campaign-types:grid.category')}
-                        </StatusLabel>
-                        <StatusText>{article.campaign.campaignType.category}</StatusText>
-                      </Grid>
-                      <Grid item xs={3.9}>
+                  <Grid
+                    container
+                    item
+                    direction={'column'}
+                    columnSpacing={{ xs: 5, md: 5 }}
+                    flexWrap={'wrap'}
+                    xs="auto">
+                    <Grid container item xs={'auto'}>
+                      <Grid item>
                         <StatusLabel variant="body2" display="inline" color="primary">
                           {t('campaigns:campaign.status')}
                         </StatusLabel>
+                      </Grid>
+                      <Grid item>
                         <StatusText>
                           {t(`campaigns:campaign-status.${article.campaign.state}`)}
                         </StatusText>
                       </Grid>
                     </Grid>
-                    <Grid container className={classes.dateAndAuthorContainer}>
-                      <Grid container item md={5} gap={1}>
-                        <AvTimerIcon color="primary" />
-                        <Typography className={classes.articlepublishedDate}>
-                          {formatDateString(article.publishedAt, i18n.language)} &nbsp;
-                          {dateToTime(article.publishedAt, i18n.language)}
-                        </Typography>
-                      </Grid>
-                      <Grid container item md={5} gap={1}>
-                        <SupervisedUserCircleOutlinedIcon color="primary" />
-                        <Typography className={classes.articleAuthor}>{article.author}</Typography>
-                      </Grid>
+                    <Grid container item gap={1}>
+                      <SupervisedUserCircleOutlinedIcon
+                        color="primary"
+                        aria-label="Author"
+                        sx={{ float: 'left' }}
+                      />
+                      <Typography className={classes.articleAuthor}>{article.author}</Typography>
                     </Grid>
                   </Grid>
-                  {getArticleHeight(article.id) > INITIAL_HEIGHT_LIMIT && (
-                    <Button
-                      key={article.id}
-                      className={classes.readMoreButton}
-                      onClick={() => {
-                        expandContent(article.id)
-                        scrollToTop(article.id)
-                      }}
-                      sx={{ background: 'transperent', width: '100%' }}>
-                      {!isExpanded[article.id]
-                        ? `${t('news:read-more')} >`
-                        : `${t('news:read-less')} <`}
-                    </Button>
-                  )}
-                </ArticleSection>
+                </Grid>
               </Grid>
-            </Grid>
-            <>
               <Grid
                 container
-                columnGap={14}
-                className={classes.dateAndAuthorContainer}
-                mb={2}
-                sx={{ display: { sm: 'none', xs: 'flex' } }}>
-                <Grid container item gap={1} xs="auto" mb={0.5}>
-                  <AvTimerIcon color="primary" />
-                  <Typography className={classes.articlepublishedDate}>
-                    {formatDateString(article.publishedAt, i18n.language)} &nbsp;
-                    {dateToTime(article.publishedAt, i18n.language)}
-                  </Typography>
-                </Grid>
-                <Grid container item gap={1} xs="auto" mb={0.5}>
-                  <SupervisedUserCircleOutlinedIcon color="primary" />
-                  <Typography className={classes.articleAuthor}>{article.author}</Typography>
-                </Grid>
-                <Grid container item gap={1.5} xs="auto" mb={0.5} ml={-1}>
-                  <Grid item>
-                    {Object.values(CampaignTypeCategory).map((category) => {
-                      if (category === article.campaign.campaignType.category)
-                        return (
-                          <IconButton color="primary" key={article.campaign.campaignType.category}>
-                            {categories[article.campaign.campaignType.category].icon ?? (
-                              <Category fontSize="small" />
-                            )}
-                          </IconButton>
-                        )
-                    })}
-                    <StatusText>{article.campaign.campaignType.category}</StatusText>
+                item
+                direction={'column'}
+                wrap="wrap"
+                xs="auto"
+                gap={1}
+                className={classes.newsSummaryMobile}>
+                <Grid container item direction={'column'} xs="auto">
+                  <Grid container item gap={1} xs="auto">
+                    <AvTimerIcon color="primary" />
+                    <Typography className={classes.articlepublishedDate}>
+                      {formatDateString(article.publishedAt, i18n.language)} &nbsp;
+                      {dateToTime(article.publishedAt, i18n.language)}
+                    </Typography>
                   </Grid>
-                  <Grid item>
-                    <IconButton color="primary">
-                      <AnalyticsIcon fontSize="small" />
-                    </IconButton>
+                  <Grid container item gap={1}>
+                    <SupervisedUserCircleOutlinedIcon color="primary" />
+                    <Typography className={classes.articleAuthor}>{article.author}</Typography>
+                  </Grid>
+                </Grid>
+                <Grid container item direction={'row'} xs="auto" md="auto" gap={1}>
+                  <Grid container item xs="auto" gap={1}>
+                    <Grid container item gap={1} xs="auto">
+                      {
+                        categories[article.campaign.campaignType.category as CampaignTypeCategory]
+                          .icon
+                      }
+                      <StatusText>{article.campaign.campaignType.category}</StatusText>
+                    </Grid>
+                  </Grid>
+                  <Grid container item xs="auto" gap={1}>
+                    <AnalyticsIcon fontSize="small" color="primary" />
                     <StatusText>
                       {t(`campaigns:campaign-status.${article.campaign.state}`)}
                     </StatusText>
                   </Grid>
                 </Grid>
               </Grid>
-            </>
-          </Grid>
+            </Grid>
+          </ArticleSection>
         )
       })}
     </>
