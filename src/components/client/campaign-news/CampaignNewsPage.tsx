@@ -126,7 +126,8 @@ export default function CampaignNewsPage({ page, slug = null }: Props) {
                     return (
                       <Link
                         href={routes.campaigns.news.listNewsPaginated(item.page, slug)}
-                        passHref>
+                        passHref
+                        legacyBehavior>
                         <PaginationItem {...item} />
                       </Link>
                     )
