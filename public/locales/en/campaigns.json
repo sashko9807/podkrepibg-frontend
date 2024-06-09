@@ -223,5 +223,12 @@
     "nature": "Nature",
     "art": "Art",
     "others": "others"
+  },
+  "campaign-details-report": {
+    "amount-collected": "Amount Collected",
+    "available": "Аvailable",
+    "guaranteed": "Guaranteed",
+    "translated": "Translated",
+    "accounted": "Accounted"
   }
 }
