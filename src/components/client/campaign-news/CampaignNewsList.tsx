@@ -1,8 +1,8 @@
-import { useTranslation } from 'react-i18next'
-import { useRouter } from 'next/router'
+import { useTranslation } from 'next-i18next'
+
 import Image from 'next/image'
 import { CampaignNewsListResponse } from 'gql/campaign-news'
-import { Button, Grid, Typography, IconButton, GridProps } from '@mui/material'
+import { Grid, Typography, GridProps } from '@mui/material'
 import { styled } from '@mui/material/styles'
 import AvTimerIcon from '@mui/icons-material/AvTimer'
 import SupervisedUserCircleOutlinedIcon from '@mui/icons-material/SupervisedUserCircleOutlined'
@@ -75,7 +75,7 @@ const ArticleSection = styled(Grid)<GridProps>(({ theme }) => ({
   },
 
   [`& .${classes.imageContainer}`]: {
-    aspectRatio: 1,
+    aspectRatio: 4 / 3,
     position: 'relative',
     maxHeight: 125,
 
@@ -122,7 +122,7 @@ const ArticleSection = styled(Grid)<GridProps>(({ theme }) => ({
     },
 
     '&:hover': {
-      textDecoration: 'underline',
+      textDecoration: 'none',
       cursor: 'pointer',
     },
   },
@@ -144,16 +144,6 @@ const ArticleSection = styled(Grid)<GridProps>(({ theme }) => ({
       display: 'flex',
     },
   },
-
-  [`& .${classes.readMoreButton}`]: {
-    fontSize: theme.typography.pxToRem(14),
-    color: theme.palette.primary.light,
-    textDecoration: 'underline',
-    padding: 0,
-    margin: 0,
-    position: 'relative',
-    bottom: 5,
-  },
 }))
 
 // These images are only for development stage
@@ -174,7 +164,6 @@ const StatusLabel = styled(Typography)(() => ({
 export default function CampaignNewsList({ articles }: Props) {
   const { t, i18n } = useTranslation('news')
 
-  const router = useRouter()
   return (
     <>
       {articles?.map((article, index: number) => {
@@ -184,14 +173,23 @@ export default function CampaignNewsList({ articles }: Props) {
         return (
           <ArticleSection item key={article.id} component="article" padding={1}>
             <Grid container item direction={'row'} className={classes.innerContainer} gap={2}>
-              <Grid item md={3} xs={5} className={classes.imageContainer}>
-                <Image src={images[index]} alt="" fill aria-hidden style={{ objectFit: 'cover' }} />
+              <Grid item md={4} xs={5} className={classes.imageContainer}>
+                <Link href={routes.campaigns.news.viewSingleArticle(article.slug)} tabIndex={-1}>
+                  <Image
+                    src={images[index]}
+                    alt=""
+                    fill
+                    aria-hidden
+                    style={{ objectFit: 'cover' }}
+                  />
+                </Link>
               </Grid>
               <Grid
                 container
                 item
+                px={2}
                 xs={6}
-                md={8}
+                md={7}
                 justifyContent={'space-between'}
                 direction={'column'}>
                 <Grid item component={'header'}>
@@ -205,12 +203,8 @@ export default function CampaignNewsList({ articles }: Props) {
                   </Typography>
                   <Typography
                     component={'h2'}
-                    // tabIndex={0}
                     className={classes.articleHeader}
-                    sx={{ wordBreak: 'break-all', typography: { xs: 'h5', sm: 'h3' } }}
-                    onClick={() =>
-                      router.push(routes.campaigns.news.viewSingleArticle(article.slug))
-                    }>
+                    sx={{ wordBreak: 'break-all', typography: { xs: 'h5', sm: 'h3' } }}>
                     <Link
                       href={routes.campaigns.news.viewSingleArticle(article.slug)}
                       style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -222,14 +216,9 @@ export default function CampaignNewsList({ articles }: Props) {
                   container
                   item
                   direction={'row'}
-                  gap={{ xs: 2, md: 5 }}
+                  gap={{ xs: 2, md: 4 }}
                   className={classes.newsSummaryDekstop}>
-                  <Grid
-                    container
-                    item
-                    direction={'column'}
-                    columnSpacing={{ xs: 5, md: 10 }}
-                    xs="auto">
+                  <Grid container item direction={'column'} gap={2} xs="auto">
                     <Grid container item>
                       <StatusLabel variant="body2" display="inline" color="primary">
                         {t('campaign-types:grid.category')}
@@ -240,38 +229,27 @@ export default function CampaignNewsList({ articles }: Props) {
                     </Grid>
                     <Grid container item>
                       <AvTimerIcon color="primary" aria-label="Published at" />
-                      <Typography variant="body2">
+                      <Typography variant="body2" marginLeft={0.8}>
                         {formatDateString(article.publishedAt, i18n.language)} &nbsp;
                         {dateToTime(article.publishedAt, i18n.language)}
                       </Typography>
                     </Grid>
                   </Grid>
-                  <Grid
-                    container
-                    item
-                    direction={'column'}
-                    columnSpacing={{ xs: 5, md: 5 }}
-                    flexWrap={'wrap'}
-                    xs="auto">
-                    <Grid container item xs={'auto'}>
-                      <Grid item>
-                        <StatusLabel variant="body2" display="inline" color="primary">
-                          {t('campaigns:campaign.status')}
-                        </StatusLabel>
-                      </Grid>
-                      <Grid item>
-                        <StatusText>
-                          {t(`campaigns:campaign-status.${article.campaign.state}`)}
-                        </StatusText>
-                      </Grid>
+                  <Grid container item direction={'column'} gap={2} xs="auto">
+                    <Grid container item>
+                      <StatusLabel variant="body2" display="inline" color="primary">
+                        {t('campaigns:campaign.status')}
+                      </StatusLabel>
+
+                      <StatusText>
+                        {t(`campaigns:campaign-status.${article.campaign.state}`)}
+                      </StatusText>
                     </Grid>
-                    <Grid container item gap={1}>
-                      <SupervisedUserCircleOutlinedIcon
-                        color="primary"
-                        aria-label="Author"
-                        sx={{ float: 'left' }}
-                      />
-                      <Typography className={classes.articleAuthor}>{article.author}</Typography>
+                    <Grid container item>
+                      <SupervisedUserCircleOutlinedIcon color="primary" aria-label="Author" />
+                      <Typography className={classes.articleAuthor} marginLeft={0.8}>
+                        {article.author}
+                      </Typography>
                     </Grid>
                   </Grid>
                 </Grid>

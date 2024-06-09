@@ -106,7 +106,6 @@ export default function CampaignNewsPage({ page, slug = null }: Props) {
           <Grid
             item
             justifyContent={'center'}
-            direction={'column'}
             xs={12}
             sm={11.1}
             sx={{ maxWidth: 1079 }}
