@@ -113,66 +113,71 @@ export default function CampaignNewsPage({ page, slug = null }: Props) {
             {data && data?.campaign.campaignNews.length > 0 && (
               <CampaignNewsList articles={data.campaign.campaignNews} />
             )}
+            <Grid container item justifyContent={'center'}>
+              {data && data?.pagination.totalPages > 1 && (
+                <Pagination
+                  count={data?.pagination.totalPages}
+                  page={data?.pagination.currentPage}
+                  sx={{ ul: { justifyContent: 'center' }, marginTop: theme.spacing(6) }}
+                  renderItem={(item) => {
+                    if (item.disabled || !item.page) {
+                      return <PaginationItem {...item} />
+                    }
+                    return (
+                      <Link
+                        href={routes.campaigns.news.listNewsPaginated(item.page, slug)}
+                        passHref>
+                        <PaginationItem {...item} />
+                      </Link>
+                    )
+                  }}
+                />
+              )}
+            </Grid>
+            <Grid item my={2} mx={2}>
+              <Card
+                elevation={0}
+                sx={{
+                  border: `1px solid ${theme.borders.light}`,
+                  borderRadius: theme.borders.semiRound,
+                  [theme.breakpoints.up('md')]: {
+                    border: 0,
+                  },
+                }}>
+                <CardContent>
+                  <Grid container justifyContent="space-between" alignItems={'center'}>
+                    {subscribeIsOpen && <RenderSubscribeModal setOpen={setSubscribeOpen} />}
+                    <Grid container item xs={12} justifyContent={'space-between'} gap={2}>
+                      <Grid
+                        container
+                        item
+                        direction={'column'}
+                        md={6}
+                        gap={2}
+                        alignItems={'center'}>
+                        <Grid container item alignItems={'center'} gap={1} wrap="nowrap">
+                          <EmailIcon color="primary" fontSize="small" cursor="pointer" />
+                          <Typography component={'h3'} fontSize={{ xs: 18, md: 25 }}>
+                            {t('common:notifications.subscribe-monthly-newsletter')}
+                          </Typography>
+                        </Grid>
+                        <Subtitle>{t('common:notifications.subscribeGeneralSubtext')}</Subtitle>
+                      </Grid>
+                      <Grid container item justifyContent={'center'} alignSelf={'center'} md={5}>
+                        <SubscribeButton
+                          onClick={() => setSubscribeOpen(true)}
+                          variant="contained"
+                          fullWidth>
+                          {t('common:notifications.subscribe-general-newsletter-button')}
+                        </SubscribeButton>
+                      </Grid>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
           </Grid>
         </Grid>
-      </Grid>
-      <Grid container item justifyContent={'center'}>
-        {data && data?.pagination.totalPages > 1 && (
-          <Pagination
-            count={data?.pagination.totalPages}
-            page={data?.pagination.currentPage}
-            sx={{ ul: { justifyContent: 'center' }, marginTop: theme.spacing(6) }}
-            renderItem={(item) => {
-              if (item.disabled || !item.page) {
-                return <PaginationItem {...item} />
-              }
-              return (
-                <Link href={routes.campaigns.news.listNewsPaginated(item.page, slug)} passHref>
-                  <PaginationItem {...item} />
-                </Link>
-              )
-            }}
-          />
-        )}
-      </Grid>
-      <Grid item>
-        <Card
-          elevation={0}
-          sx={{
-            border: { xs: `1px solid ${theme.borders.light}`, sm: '0px' },
-            borderRadius: theme.borders.semiRound,
-            height: theme.spacing(40),
-            margin: theme.spacing(4),
-            [theme.breakpoints.up('sm')]: {
-              height: theme.spacing(20),
-            },
-          }}>
-          <CardContent>
-            <Grid container justifyContent="center">
-              {subscribeIsOpen && <RenderSubscribeModal setOpen={setSubscribeOpen} />}
-              <Grid container item md={8} xs={12} sx={{ justifyContent: 'start' }}>
-                <Grid
-                  item
-                  xs={12}
-                  display="flex"
-                  sx={{ mt: 3.5, mb: 0.5, justifyContent: 'justify' }}>
-                  <EmailIcon color="primary" fontSize="small" sx={{ mr: 0.5 }} cursor="pointer" />
-                  <SubscribeHeading>
-                    {t('common:notifications.subscribe-monthly-newsletter')}
-                  </SubscribeHeading>
-                </Grid>
-                <Subtitle sx={{ margin: '5px' }}>
-                  {t('common:notifications.subscribeGeneralSubtext')}
-                </Subtitle>
-              </Grid>
-              <Grid>
-                <SubscribeButton onClick={() => setSubscribeOpen(true)} variant="contained">
-                  {t('common:notifications.subscribe-general-newsletter-button')}
-                </SubscribeButton>
-              </Grid>
-            </Grid>
-          </CardContent>
-        </Card>
       </Grid>
     </Root>
   )
