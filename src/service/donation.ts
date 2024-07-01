@@ -8,6 +8,7 @@ import {
   CheckoutSessionResponse,
   DonationBankInput,
   DonationResponse,
+  IrisCheckoutSessionInput,
   StripeRefundResponse,
   UserDonationInput,
 } from 'gql/donations'
@@ -23,6 +24,13 @@ export const createCheckoutSession = async (data: CheckoutSessionInput) => {
     endpoints.donation.createCheckoutSession.url,
     data,
   )
+}
+
+export const createIrisSession = async (data: IrisCheckoutSessionInput) => {
+  return await apiClient.post<
+    IrisCheckoutSessionInput,
+    AxiosResponse<{ userHash: string; hookHash: string }>
+  >(endpoints.irisPay.createCheckoutSession.url, data)
 }
 
 export function useCreatePaymentIntent(params: Stripe.PaymentIntentCreateParams) {

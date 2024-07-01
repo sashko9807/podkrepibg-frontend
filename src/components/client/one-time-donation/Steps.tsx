@@ -12,7 +12,7 @@ import { createDonationWish } from 'service/donationWish'
 import { ApiErrors, isAxiosError, matchValidator } from 'service/apiErrors'
 import { useCurrentPerson } from 'common/util/useCurrentPerson'
 import CenteredSpinner from 'components/common/CenteredSpinner'
-import { useDonationSession } from 'common/hooks/donation'
+import { useIRISCheckoutSession, useStripeCheckoutSession } from 'common/hooks/donation'
 import { useViewCampaign } from 'common/hooks/campaigns'
 import { baseUrl, routes } from 'common/routes'
 
@@ -25,6 +25,8 @@ import { FormikStep, FormikStepper } from './FormikStepper'
 import { validateFirst, validateSecond, validateThird } from './helpers/validation-schema'
 import { StepsContext } from './helpers/stepperContext'
 import { useDonationStepSession } from './helpers/donateSession'
+import { apiClient } from 'service/apiClient'
+import { endpoints } from 'service/apiEndpoints'
 
 const initialValues: OneTimeDonation = {
   type: DonationType.donation,
@@ -63,7 +65,8 @@ export default function DonationStepper({ onStepChange }: DonationStepperProps) 
   initialValues.amount = (router.query.price as string) || ''
   const slug = String(router.query.slug)
   const { data, isLoading } = useViewCampaign(slug)
-  const mutation = useDonationSession()
+  const stripeCheckoutMutation = useStripeCheckoutSession()
+  const irisCheckoutMutation = useIRISCheckoutSession()
   const { data: session } = useSession()
   const { data: { user: person } = { user: null } } = useCurrentPerson()
   const [donateSession, { updateDonationSession, clearDonationSession }] =
@@ -76,35 +79,70 @@ export default function DonationStepper({ onStepChange }: DonationStepperProps) 
   const userEmail = session?.user?.email
   const donate = React.useCallback(
     async (amount?: number, values?: OneTimeDonation) => {
-      const { data } = await mutation.mutateAsync({
-        type: person?.company ? DonationType.corporate : DonationType.donation,
-        mode: values?.isRecurring ? 'subscription' : 'payment',
-        amount,
-        campaignId: campaign.id,
-        personId: person ? person?.id : '',
-        firstName: values?.personsFirstName ? values.personsFirstName : 'Anonymous',
-        lastName: values?.personsLastName ? values.personsLastName : 'Donor',
-        personEmail: values?.personsEmail ? values.personsEmail : userEmail,
-        isAnonymous: values?.isAnonymous !== undefined ? values.isAnonymous : true,
-        phone: values?.personsPhone ? values.personsPhone : null,
-        successUrl: `${baseUrl}/${i18n?.language}/${routes.campaigns.oneTimeDonation(
-          campaign.slug,
-        )}?success=true`,
-        cancelUrl: `${baseUrl}/${i18n?.language}/${routes.campaigns.oneTimeDonation(
-          campaign.slug,
-        )}?success=false`,
-        message: values?.message,
-      })
-      if (values?.payment === PaymentProvider.bank) {
-        // Do not redirect for bank payments
+      if (values?.payment === 'card') {
+        const { data } = await stripeCheckoutMutation.mutateAsync({
+          type: person?.company ? DonationType.corporate : DonationType.donation,
+          mode: values?.isRecurring ? 'subscription' : 'payment',
+          amount,
+          campaignId: campaign.id,
+          personId: person ? person?.id : '',
+          firstName: values?.personsFirstName ? values.personsFirstName : 'Anonymous',
+          lastName: values?.personsLastName ? values.personsLastName : 'Donor',
+          personEmail: values?.personsEmail ? values.personsEmail : userEmail,
+          isAnonymous: values?.isAnonymous !== undefined ? values.isAnonymous : true,
+          phone: values?.personsPhone ? values.personsPhone : null,
+          successUrl: `${baseUrl}/${i18n?.language}/${routes.campaigns.oneTimeDonation(
+            campaign.slug,
+          )}?success=true`,
+          cancelUrl: `${baseUrl}/${i18n?.language}/${routes.campaigns.oneTimeDonation(
+            campaign.slug,
+          )}?success=false`,
+          message: values?.message,
+        })
+        if (data.session.url) {
+          //send the user to payment provider
+          window.location.href = data.session.url
+        }
         return
       }
-      if (data.session.url) {
-        //send the user to payment provider
-        window.location.href = data.session.url
+      if (values?.payment === PaymentProvider.bank) {
+        const res = await irisCheckoutMutation.mutateAsync({
+          name: values?.personsFirstName ? values.personsFirstName : 'Anonymous',
+          family: values?.personsLastName ? values.personsLastName : 'Donor',
+          email: values.personsEmail,
+          campaignId: campaign.id,
+          state: 'createPaymentSession',
+          successUrl: `${baseUrl}/${i18n?.language}${routes.campaigns.oneTimeDonation(
+            campaign.slug,
+          )}?success=true`,
+          errorUrl: `${baseUrl}/${i18n?.language}${routes.campaigns.oneTimeDonation(
+            campaign.slug,
+          )}?success=false`,
+        })
+        let wishId = ''
+        if (values?.message) {
+          const result = await createDonationWish({
+            message: values.message,
+            campaignId: campaign.id,
+            personId: !values.isAnonymous && person?.id ? person.id : null,
+          })
+          wishId = result.data.id
+        }
+        const url = new URLSearchParams({
+          type: values.type,
+          userHash: res.data.userHash,
+          hookHash: res.data.hookHash,
+          wish_id: wishId,
+          amount: values?.amount ?? 10,
+          is_anonymous: String(values.isAnonymous),
+          billingEmail: values.personsEmail,
+          code: campaign.paymentReference,
+        })
+        router.push(`${baseUrl}${routes.irisPay.checkout(url.toString())}`)
+        return
       }
     },
-    [mutation, session, person],
+    [stripeCheckoutMutation, session, person],
   )
 
   const onSubmit = async (
@@ -112,18 +150,6 @@ export default function DonationStepper({ onStepChange }: DonationStepperProps) 
     { setFieldError, resetForm }: FormikHelpers<OneTimeDonation>,
   ) => {
     try {
-      if (values?.payment === PaymentProvider.bank) {
-        if (values?.message) {
-          await createDonationWish({
-            message: values.message,
-            campaignId: campaign.id,
-            personId: !values.isAnonymous && person?.id ? person.id : null,
-          })
-        }
-        router.push(`${baseUrl}${routes.campaigns.oneTimeDonation(campaign.slug)}?success=true`)
-        return
-      }
-
       const data = {
         currency: campaign.currency,
         amount: Math.round(values.amountWithFees),

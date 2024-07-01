@@ -254,6 +254,9 @@ export const routes = {
       newsLetterConsent: '/admin/marketing/newsletter-consent',
     },
   },
+  irisPay: {
+    checkout: (data: string) => `/iris-pay/checkout?${data}`,
+  },
   dev: {
     openData: '/open-data',
     apiDocs: '/docs',

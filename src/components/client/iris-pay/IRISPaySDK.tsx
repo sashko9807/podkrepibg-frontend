@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import IrisPayComponent, {
   IRISAddIbanElementProps,
   IRISAddIbanWithBankElementProps,
@@ -28,14 +28,8 @@ export type IRISPayPropsTest = ElementWithListener<IRISPayCommonProps>
 
 export default function IRISPaySDK(props: IRISPayPropsTest) {
   const context = React.useContext(IRISPayContext)
-  const [mount] = useState(props.isMounted ?? true)
   if (!context) {
     throw new Error('IRISPay must be a child of IrisSdkElement')
-  }
-  if (props.type === 'payment-data') {
-    if (!context.publicHash)
-      throw new Error('publicHash must be set for payment-data or budged-payment types')
-    props.payment_data['publicHash'] = context.publicHash
   }
   const irisComponentRef = useRef<HTMLIFrameElement | null>(null)
   const { onLoad, onSuccess, onError } = props
@@ -70,7 +64,6 @@ export default function IRISPaySDK(props: IRISPayPropsTest) {
     }
   }, [])
 
-  if (!mount) return null
   return (
     <>
       <IrisPayComponent
@@ -85,10 +78,30 @@ export default function IRISPaySDK(props: IRISPayPropsTest) {
 }
 
 export function PaymentDataElement(props: ElementWithListener<IRISPaymentDataElementProps>) {
+  const context = useContext(IRISPayContext)
+  if (!context?.publicHash)
+    throw new Error('publicHash must be set for payment-data or budged-payment types')
+  if (!context?.currency || (context?.currency !== 'BGN' && context?.currency !== 'EUR')) {
+    throw new Error(
+      'Currency missing from context or has invalid values.\n Supported currencies are: EUR, BGN',
+    )
+  }
+  props.payment_data['publicHash'] = context.publicHash
+  props.payment_data['currency'] = context.currency
   return <IRISPaySDK {...props} type="payment-data" />
 }
 
 export function BudgetPaymentElement(props: ElementWithListener<IRISBudgetPaymentElementProps>) {
+  const context = useContext(IRISPayContext)
+  if (!context?.publicHash)
+    throw new Error('publicHash must be set for payment-data or budged-payment types')
+  if (!context?.currency || (context?.currency !== 'BGN' && context?.currency !== 'EUR')) {
+    throw new Error(
+      'Currency missing from context or has invalid values.\n Supported currencies are: EUR, BGN',
+    )
+  }
+  props.payment_data['publicHash'] = context.publicHash
+  props.payment_data['currency'] = context.currency
   return <IRISPaySDK {...props} type="budget-payment" />
 }
 

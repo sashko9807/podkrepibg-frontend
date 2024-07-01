@@ -33,6 +33,17 @@ export type CheckoutSessionInput = {
   message?: string
 }
 
+export type IrisCheckoutSessionInput = {
+  campaignId: string
+  name?: string
+  family?: string
+  successUrl?: string
+  errorUrl?: string
+  email: string
+  isAnonymous?: string
+  state?: string
+}
+
 export type TPaymentResponse = {
   id: UUID
   type: PaymentType

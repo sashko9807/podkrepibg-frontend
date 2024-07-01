@@ -424,4 +424,9 @@ export const endpoints = {
       }
     },
   },
+  irisPay: {
+    createCustomer: <Endpoint>{ url: '/iris-pay/create-customer', method: 'POST' },
+    createWebhook: <Endpoint>{ url: '/iris-pay/create-webhook', method: 'POST' },
+    createCheckoutSession: <Endpoint>{ url: '/iris-pay/create-checkout-session', method: 'POST' },
+  },
 }

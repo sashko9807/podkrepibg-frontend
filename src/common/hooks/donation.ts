@@ -12,16 +12,17 @@ import {
   CheckoutSessionResponse,
   DonationResponse,
   DonorsCountResult,
+  IrisCheckoutSessionInput,
   PaymentAdminResponse,
   TPaymentResponse,
   TotalDonatedMoneyResponse,
   UserDonationResult,
 } from 'gql/donations'
-import { createCheckoutSession } from 'service/donation'
+import { createCheckoutSession, createIrisSession } from 'service/donation'
 import { CampaignDonationHistoryResponse } from 'gql/campaigns'
 import { FilterData, PaginationData } from 'gql/types'
 
-export function useDonationSession() {
+export function useStripeCheckoutSession() {
   const { t } = useTranslation()
   const mutation = useMutation<
     AxiosResponse<CheckoutSessionResponse>,
@@ -38,6 +39,20 @@ export function useDonationSession() {
       return false
     },
     retryDelay: 1000,
+  })
+  return mutation
+}
+
+export function useIRISCheckoutSession() {
+  const { t } = useTranslation('')
+  const mutation = useMutation<
+    AxiosResponse<{ userHash: string; hookHash: string }>,
+    AxiosError<ApiErrors>,
+    IrisCheckoutSessionInput
+  >({
+    mutationFn: createIrisSession,
+    onError: () => AlertStore.show(t('common:alerts.error'), 'error'),
+    onSuccess: () => AlertStore.show(t('common:alerts.message-sent'), 'success'),
   })
   return mutation
 }

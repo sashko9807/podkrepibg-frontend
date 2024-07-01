@@ -11,6 +11,8 @@ import SubscriptionSection from './sections/SubscriptionSection/SubscriptionSect
 import TeamMembersSection from './sections/TeamMembersSection/TeamMembersSection'
 import JoinPodkrepiBgSection from './sections/JoinPodkrepiBgSection/JoinPodkrepiBgSection'
 import FaqSection from './sections/FaqSection/FaqSection'
+import { PaymentDataElement } from '../iris-pay/IRISPaySDK'
+import IrisElements from '../iris-pay/IRISPayContext'
 
 export default function IndexPage() {
   const { t } = useTranslation('index')
@@ -31,6 +33,21 @@ export default function IndexPage() {
       <JoinPodkrepiBgSection />
       <SubscriptionSection />
       <FaqSection />
+      <IrisElements
+        userhash={'6b788541-b5a0-4009-a895-098610599cf7'}
+        hookhash="6b788541-b5a0-4009-a895-098610599cf7"
+        publicHash="1234"
+        currency="BGN"
+        backend="development">
+        <PaymentDataElement
+          payment_data={{
+            sum: 123,
+            description: 'currency',
+            toIban: '123',
+          }}
+          onLoad={() => console.log('paymentElement loaded')}
+        />
+      </IrisElements>
     </Layout>
   )
 }

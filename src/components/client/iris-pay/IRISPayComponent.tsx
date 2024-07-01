@@ -1,5 +1,7 @@
 import React, { forwardRef } from 'react'
 
+export type SupportedCurrencies = 'BGN' | 'EUR'
+
 type PaymentData = {
   sum: number
   publicHash?: string
@@ -22,7 +24,7 @@ type IRISPaymentData = {
 
 type IRISAddIbanWithBank = { type: 'add-iban-with-bank'; ibanhookhash?: string; bankhash: string }
 type IrisAddIban = { type: 'add-iban'; show_bank_selector?: boolean; ibanhookhash?: string }
-type IrisBudgetPayment = { type: 'budget-payment'; payment_data: string }
+type IrisBudgetPayment = { type: 'budget-payment'; payment_data: PaymentData & BudgetPayment }
 type IRISPaymentElement = { type: 'payment'; payment_data: PaymentData & BudgetPayment }
 type IRISPayWithCodeElement = { type: 'pay-with-code'; code: string }
 
@@ -34,8 +36,8 @@ type IRISPayTypes =
   | IRISPaymentData
   | IRISPayWithCodeElement
 
-type IRISSupportedLangs = 'bg' | 'en' | 'ro' | 'el'
-type IRISSupportedCountries = 'bulgaria' | 'romania' | 'greece'
+export type IRISSupportedLangs = 'bg' | 'en' | 'ro' | 'el'
+export type IRISSupportedCountries = 'bulgaria' | 'romania' | 'greece'
 export type IRISBackend = 'https://developer.sandbox.irispay.bg/' | 'https://developer.irispay.bg/'
 type IrisPayComponentCommon = {
   userhash: string
