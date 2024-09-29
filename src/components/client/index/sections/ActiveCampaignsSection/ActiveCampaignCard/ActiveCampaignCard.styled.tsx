@@ -85,17 +85,16 @@ export const SumNumber = styled('span')(() => ({
 
 export const StyledCardActions = styled(CardActions)(() => ({
   position: 'absolute',
-  bottom: theme.spacing(14.37),
-  right: theme.spacing(0.75),
+  bottom: theme.spacing(3),
+  right: theme.spacing(2),
+  zIndex: 1000,
   padding: 0,
 }))
 
 export const DonateButton = styled(LinkButton)(() => ({
   fontFamily: 'Montserrat, sans-serif',
-  width: theme.spacing(11.125),
-  height: theme.spacing(4.5),
-  padding: theme.spacing(0.75, 2),
-  marginRight: theme.spacing(1),
+  padding: theme.spacing(0.35, 2),
+
   backgroundColor: theme.palette.secondary.main,
   boxShadow:
     '0px 3px 1px -2px rgba(0, 0, 0, 0.2), 0px 2px 2px rgba(0, 0, 0, 0.14), 0px 1px 5px rgba(0, 0, 0, 0.12)',

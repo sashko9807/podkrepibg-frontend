@@ -1,7 +1,7 @@
 import { useTranslation, i18n } from 'next-i18next'
 import { CampaignResponse } from 'gql/campaigns'
 
-import { Box } from '@mui/material'
+import { Box, Typography } from '@mui/material'
 
 import { routes } from 'common/routes'
 import { campaignListPictureUrl } from 'common/util/campaignImageUrls'
@@ -23,6 +23,7 @@ import {
   SumWrapper,
 } from '../../index/sections/ActiveCampaignsSection/ActiveCampaignCard/ActiveCampaignCard.styled'
 import Image from 'next/image'
+import CampaignStateText from './CampaignState'
 
 type Props = { campaign: CampaignResponse; index: number }
 
@@ -47,14 +48,14 @@ export default function ActiveCampaignCard({ campaign, index }: Props) {
 
   return (
     <Root data-testid={`campaign-card-${index}`}>
-      <Link href={routes.campaigns.viewCampaignBySlug(slug)}>
-        <Box
-          position={'relative'}
-          sx={{
-            width: '100%',
-            aspectRatio: 1.5,
-            maxHeight: theme.spacing(27.9),
-          }}>
+      <Box
+        position={'relative'}
+        sx={{
+          width: '100%',
+          aspectRatio: 1.5,
+          maxHeight: theme.spacing(27.9),
+        }}>
+        <Link href={routes.campaigns.viewCampaignBySlug(slug)}>
           <Image
             priority
             src={campaignImagesUrl}
@@ -64,13 +65,14 @@ export default function ActiveCampaignCard({ campaign, index }: Props) {
             quality={index === 0 ? 100 : 75}
             style={{ objectFit: 'cover' }}
           />
-        </Box>
-        {campaignState === CampaignState.complete && percentage >= 100 ? (
-          <SuccessfullCampaignTag />
-        ) : (
-          ''
-        )}
-        <StyledContent>
+        </Link>
+      </Box>
+      <StyledContent>
+        <Link href={routes.campaigns.viewCampaignBySlug(slug)}>
+          <Box my={1}>
+            <CampaignStateText state={campaignState} />
+            <CampaignProgress state={campaignState} raised={reached} target={target} />
+          </Box>
           <SumWrapper>
             <Sum>
               <SumNumber>
@@ -87,20 +89,17 @@ export default function ActiveCampaignCard({ campaign, index }: Props) {
               </SumNumber>
             </Sum>
           </SumWrapper>
-          <CampaignProgress campaignId={id} raised={reached} target={target} />
           <CampaignTitle>{title}</CampaignTitle>
-        </StyledContent>
-      </Link>
-      <StyledCardActions disableSpacing>
-        {(campaignState === CampaignState.complete && !allowDonationOnComplete) || (
+        </Link>
+        {/* <StyledCardActions disableSpacing>
           <DonateButton
-            href={routes.campaigns.oneTimeDonation(slug)}
+            href={routes.campaigns.viewCampaignBySlug(slug)}
             variant="contained"
             color="secondary">
-            {t('cta.support')}
+            {t('Научи повече')}
           </DonateButton>
-        )}
-      </StyledCardActions>
+        </StyledCardActions> */}
+      </StyledContent>
     </Root>
   )
 }
