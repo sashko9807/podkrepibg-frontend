@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { styled } from '@mui/material/styles'
+import { darken, lighten, styled } from '@mui/material/styles'
 
 import type { Theme } from '@mui/material'
 
@@ -20,12 +20,14 @@ const ProgressBar = styled('div')(
     theme,
     progress = 0,
     labelSize = `0.81rem`,
+    color,
   }: {
     theme?: Theme
     progress: number
     labelSize?: string
+    color: string
   }) => ({
-    backgroundColor: '#b1defe',
+    backgroundColor: lighten(color, 0.8),
     borderRadius: 10,
     height: `calc(${labelSize} * 1)`,
     [`&.${classes.donationProgress}`]: {
@@ -36,7 +38,7 @@ const ProgressBar = styled('div')(
       borderRadius: 10,
       height: `calc(${labelSize} * 1)`,
       width: `${progress}%`,
-      background: progress >= 100 ? '#62DE88' : theme?.palette.primary.main,
+      background: progress >= 100 ? '#62DE88' : darken(color, 1),
       transition: `width 400ms ease-out`,
     },
 
@@ -63,6 +65,7 @@ export default function CampaignProgress({ campaignId, raised, target }: Props) 
   return (
     <ProgressBar
       role="progressbar"
+      color={'#b1defe'}
       progress={progressBarWidth}
       className={classes.donationProgress}
       aria-valuenow={percentage}
