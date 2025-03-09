@@ -83,7 +83,7 @@ const allNavItems: NavItem[] = [
     label: 'components.footer.terms-of-service',
   },
   {
-    href: routes.campaigns.application,
+    href: routes.faq,
     label: 'nav.campaigns.faq',
   },
 ]

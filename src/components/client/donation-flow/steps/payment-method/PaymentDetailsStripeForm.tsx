@@ -16,6 +16,8 @@ export type PaymentDetailsStripeFormProps = {
 
 const BillingNameField = styled(FormTextField)(({ theme }) => ({
   '& .MuiOutlinedInput-root': {
+    fontFamily: "Montserrat, 'Helvetica Neue', Helvetica, Arial, sans-serif",
+
     '& fieldset': {
       borderColor: '#e0e0e0',
     },
@@ -31,7 +33,6 @@ const BillingNameField = styled(FormTextField)(({ theme }) => ({
     '&::placeholder': {
       opacity: 0.7,
     },
-    height: 10,
   },
 }))
 
@@ -70,13 +71,19 @@ export default function PaymentDetailsStripeForm({
           opacity: isLoading ? 0 : 1,
           transition: 'opacity 0.6s ease-out',
         }}>
-        <Typography component={'label'} fontSize={'0.875rem'} fontWeight={350} color={'black'}>
+        <Typography
+          component={'label'}
+          fontFamily={`Montserrat, 'Helvetica Neue', Helvetica, Arial, sans-serif`}
+          fontSize={'0.875rem'}
+          fontWeight={350}
+          color={'black'}>
           {t('donation-flow:step.payment-method.field.card-data.name-label')}
         </Typography>
         <BillingNameField
           name="billingName"
           type="text"
-          label={t('donation-flow:step.payment-method.field.card-data.name-label')}
+          fullWidth
+          label={''}
           onInput={(e) => {
             const input = e.target as HTMLInputElement
             input.value = input.value

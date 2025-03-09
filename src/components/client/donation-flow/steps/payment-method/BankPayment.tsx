@@ -81,11 +81,11 @@ function BankPayment() {
         </Grid2>
       </Grid2>
 
-      <Typography>{t('step.payment-method.bank.message-warning')}</Typography>
-      <Alert sx={{ mt: 2, mx: mobile ? -2 : 0 }} severity="error">
+      {/* <Typography>{t('step.payment-method.bank.message-warning')}</Typography> */}
+      {/* <Alert sx={{ mt: 2, mx: mobile ? -2 : 0 }} severity="error">
         <AlertTitle>{t('step.payment-method.bank.alert.important')}!</AlertTitle>
         {t('step.payment-method.bank.alert.authenticate')}
-      </Alert>
+      </Alert> */}
     </List>
   )
 }
