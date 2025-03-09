@@ -1,6 +1,6 @@
 import { useSession } from 'next-auth/react'
 import { LinkAuthenticationElement, PaymentElement } from '@stripe/react-stripe-js'
-import { Box, BoxProps, TextField, Typography } from '@mui/material'
+import { Box, BoxProps, Typography } from '@mui/material'
 import { useEffect, useState } from 'react'
 import { useField, useFormikContext } from 'formik'
 
@@ -8,12 +8,13 @@ import { DonationFormData } from '../../helpers/types'
 import { styled } from '@mui/material/styles'
 import { useTranslation } from 'next-i18next'
 import { ids } from '../../common/DonationFormSections'
+import FormTextField from 'components/common/form/FormTextField'
 
 export type PaymentDetailsStripeFormProps = {
   containerProps?: BoxProps
 }
 
-const BillingNameField = styled(TextField)(({ theme }) => ({
+const BillingNameField = styled(FormTextField)(({ theme }) => ({
   '& .MuiOutlinedInput-root': {
     '& fieldset': {
       borderColor: '#e0e0e0',
@@ -40,7 +41,6 @@ export default function PaymentDetailsStripeForm({
   const { data: session } = useSession()
   const [isLoading, setIsloading] = useState(true)
   const formik = useFormikContext<DonationFormData>()
-  const [billingName] = useField('billingName')
   const { t } = useTranslation()
   useEffect(() => {
     formik.setFieldValue('billingEmail', session?.user?.email || '')
@@ -74,11 +74,9 @@ export default function PaymentDetailsStripeForm({
           {t('donation-flow:step.payment-method.field.card-data.name-label')}
         </Typography>
         <BillingNameField
-          fullWidth
-          {...billingName}
-          id="billingName"
-          variant="outlined"
-          placeholder={t('donation-flow:step.payment-method.field.card-data.name-label')}
+          name="billingName"
+          type="text"
+          label={t('donation-flow:step.payment-method.field.card-data.name-label')}
           onInput={(e) => {
             const input = e.target as HTMLInputElement
             input.value = input.value

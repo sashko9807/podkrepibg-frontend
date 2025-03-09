@@ -83,12 +83,12 @@ const allNavItems: NavItem[] = [
     label: 'components.footer.terms-of-service',
   },
   {
-    href: routes.faq,
+    href: routes.campaigns.application,
     label: 'nav.campaigns.faq',
   },
 ]
 
-export const navItems = allNavItems.filter((el) => typeof el.enabled === 'undefined' ?? el.enabled)
+export const navItems = allNavItems.filter((el) => typeof el.enabled === 'undefined')
 
 export default function ProjectMenu() {
   const { t } = useTranslation()
