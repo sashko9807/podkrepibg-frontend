@@ -80,7 +80,7 @@ const moduleExports = {
       {
         key: 'X-XSS-Protection',
         value: '1; mode=block',
-      },
+      }
     ]
 
     return [
@@ -88,7 +88,7 @@ const moduleExports = {
         // Apply the headers to all routes
         source: '/:path*',
         headers: securityHeaders,
-      },
+      }
     ]
   },
   modularizeImports: {

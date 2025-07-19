@@ -28,19 +28,23 @@ export const amountValidation = {
   amountChosen: yup.string().when('payment', {
     is: 'card',
     then: yup.string().optional(),
+    otherwise: yup.string(),
   }),
   finalAmount: yup.number().when('payment', {
     is: (payment: string | null) => ['card', null].includes(payment),
     then: () =>
       yup.number().min(1, 'donation-flow:step.amount.field.final-amount.error').required(),
+    otherwise: yup.number(),
   }),
   otherAmount: yup.number().when('amountChosen', {
     is: 'other',
     then: yup.number().min(1, 'donation-flow:step.amount.field.final-amount.error').required(),
+    otherwise: yup.number(),
   }),
   cardIncludeFees: yup.boolean().when('payment', {
     is: 'card',
     then: yup.boolean().required(),
+    otherwise: yup.boolean(),
   }),
   cardRegion: yup
     .string()
@@ -48,6 +52,7 @@ export const amountValidation = {
     .when('payment', {
       is: 'card',
       then: yup.string().oneOf(Object.values(CardRegion)).required(),
+      otherwise: yup.string().oneOf(Object.values(CardRegion)),
     }) as yup.SchemaOf<CardRegion>,
 }
 

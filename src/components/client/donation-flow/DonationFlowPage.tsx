@@ -6,6 +6,7 @@ import { DonationFlowProvider } from './contexts/DonationFlowProvider'
 import { StripeElementsProvider } from './contexts/StripeElementsProvider'
 import DonationFlowLayout from './DonationFlowLayout'
 import { CampaignResponse } from 'gql/campaigns'
+import IrisElements from '../iris-pay/IRISPayContext'
 
 export default function DonationFlowPage({
   slug,
@@ -20,11 +21,17 @@ export default function DonationFlowPage({
   const campaign = data?.campaign as CampaignResponse
   return (
     <DonationFlowProvider campaign={campaign} setupIntent={setupIntent}>
-      <StripeElementsProvider>
-        <DonationFlowLayout campaign={campaign}>
-          <DonationFlowForm />
-        </DonationFlowLayout>
-      </StripeElementsProvider>
+      <IrisElements
+        backend="development"
+        country="bulgaria"
+        publicHash="f75fa38d-ca1b-4241-a01a-58965d444aba"
+        currency="BGN">
+        <StripeElementsProvider>
+          <DonationFlowLayout campaign={campaign}>
+            <DonationFlowForm />
+          </DonationFlowLayout>
+        </StripeElementsProvider>
+      </IrisElements>
     </DonationFlowProvider>
   )
 }

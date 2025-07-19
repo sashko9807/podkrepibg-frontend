@@ -9,12 +9,15 @@ import { PersistFormikValues } from 'formik-persist-values'
 import { Box, Button, IconButton, Tooltip, Typography, Grid2 } from '@mui/material'
 import { ArrowBack, Info } from '@mui/icons-material'
 
+import { PaymentDataElement } from 'components/client/iris-pay/IRISPaySDK'
+
 import { routes } from 'common/routes'
 import CheckboxField from 'components/common/form/CheckboxField'
 import AcceptPrivacyPolicyField from 'components/common/form/AcceptPrivacyPolicyField'
 import ConfirmationDialog from 'components/common/ConfirmationDialog'
 import SubmitButton from 'components/common/form/SubmitButton'
 import { useCancelSetupIntent, useUpdateSetupIntent } from 'service/donation'
+import { useStartPaymentSession, useCreatePaymentSession } from 'service/irisPayment'
 
 import StepSplitter from './common/StepSplitter'
 import PaymentMethod from './steps/payment-method/PaymentMethod'
@@ -42,6 +45,8 @@ import { confirmStripePayment } from './helpers/confirmStripeDonation'
 
 import { StripeError } from '@stripe/stripe-js'
 import { DonationFormErrorList } from './common/DonationFormErrors'
+import { useIrisElements } from '../iris-pay/irisContextHooks'
+import { useIrisPayment } from './hooks/useIrisPayment'
 
 const initialGeneralFormValues = {
   mode: null,
@@ -51,6 +56,7 @@ const initialGeneralFormValues = {
   privacy: false,
   billingName: '',
   billingEmail: '',
+  selectedBankHashId: 'bf935ea4814061d70902683c1565fa2c',
 }
 
 const initialValues: DonationFormData = {
@@ -73,12 +79,19 @@ const generalValidation = {
     .required() as yup.SchemaOf<DonationFormPaymentMethod>,
   billingName: yup.string().when('payment', {
     is: 'card',
-    then: yup.string().required('donation-flow:step.payment-method.field.card-data.errors.name'),
+    then: yup.string(),
+    otherwise: yup.string(),
   }),
   billingEmail: yup.string().when('payment', {
     is: 'card',
-    then: yup.string().required('donation-flow:step.payment-method.field.card-data.errors.email'),
+    then: yup.string(),
+    otherwise: yup.string(),
   }),
+  // selectedBankHashId: yup.string().when('payment', {
+  //   is: (value: string) => value === 'irispay',
+  //   then: yup.string().required('donation-flow:step.payment-method.field.bank.error'),
+  //   otherwise: yup.string(),
+  // }),
   authentication: yup
     .string()
     .oneOf(Object.values(DonationFormAuthState), 'donation-flow:step.authentication.error')
@@ -88,7 +101,7 @@ const generalValidation = {
   privacy: yup.bool().required().isTrue('donation-flow:step.summary.field.privacy.error'),
 }
 
-export const validationSchema: yup.SchemaOf<DonationFormData> = yup
+export const validationSchema = yup
   .object()
   .defined()
   .shape({
@@ -103,14 +116,26 @@ export function DonationFlowForm() {
   const { t } = useTranslation('donation-flow')
   const { campaign, setupIntent, paymentError, setPaymentError } = useDonationFlow()
   const stripe = useStripe()
+  const iris = useIrisElements()
   const elements = useElements()
   const router = useRouter()
   const updateSetupIntentMutation = useUpdateSetupIntent()
   const cancelSetupIntentMutation = useCancelSetupIntent()
+  const startPaymentMutation = useStartPaymentSession()
+  const createPaymentSessionMutation = useCreatePaymentSession()
   const paymentMethodSectionRef = React.useRef<HTMLDivElement>(null)
   const authenticationSectionRef = React.useRef<HTMLDivElement>(null)
   const [showCancelDialog, setShowCancelDialog] = React.useState(false)
   const [submitPaymentLoading, setSubmitPaymentLoading] = React.useState(false)
+  const [showPaymentElement, setShowPaymentElement] = React.useState(false)
+
+  // Use the Iris payment hook
+  const { handleOnPaymentElementLoad, handleOnPaymentSuccess, handleOnPaymentError, isCompleting } =
+    useIrisPayment({
+      formikRef,
+      setShowPaymentElement,
+      setPaymentError,
+    })
   const { data: { user: person } = { user: null } } = useCurrentPerson()
   const { data: session } = useSession({
     required: false,
@@ -118,6 +143,12 @@ export function DonationFlowForm() {
       formikRef.current?.setFieldValue('authentication', null)
     },
   })
+
+  // Call payments/start when component mounts
+  useEffect(() => {
+    startPaymentMutation.mutate()
+  }, [])
+
   useEffect(() => {
     if (session?.user) {
       formikRef.current?.setFieldValue('email', session.user.email, false)
@@ -128,6 +159,32 @@ export function DonationFlowForm() {
     formikRef.current?.setFieldValue('email', '')
     formikRef.current?.setFieldValue('isAnonymous', true, false)
   }, [session])
+
+  // Add some debugging to see what's happening
+  useEffect(() => {
+    console.log('Payment element visibility:', showPaymentElement)
+    console.log('Iris context:', iris)
+    console.log('Payment session:', iris?.paymentSession)
+    console.log('Payment data:', iris?.paymentData)
+  }, [showPaymentElement, iris?.paymentSession, iris?.paymentData])
+
+  // Add scroll to top when payment element shows
+  useEffect(() => {
+    if (showPaymentElement) {
+      // Scroll to the payment element wrapper
+      const paymentWrapper = document.querySelector('[data-payment-wrapper]')
+      if (paymentWrapper) {
+        const headerOffset = 100 // Account for fixed header
+        const elementPosition = paymentWrapper.getBoundingClientRect().top
+        const offsetPosition = elementPosition + window.scrollY - headerOffset
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth',
+        })
+      }
+    }
+  }, [showPaymentElement])
 
   return (
     <Formik
@@ -140,6 +197,68 @@ export function DonationFlowForm() {
       validationSchema={validationSchema}
       onSubmit={async (values, helpers) => {
         setSubmitPaymentLoading(true)
+
+        if (values.payment === DonationFormPaymentMethod.IRISPAY) {
+          try {
+            const name = values?.billingName?.split(' ') as string[]
+            console.log('Creating payment session with:', {
+              campaignId: campaign.id,
+              email: values.billingEmail,
+              name: name[0],
+              family: name[name.length - 1],
+            })
+
+            const sessionData = await createPaymentSessionMutation.mutateAsync({
+              campaignId: campaign.id,
+              email: values.billingEmail as string,
+              name: name[0] as string,
+              family: name[name.length - 1] as string,
+              successUrl: `${window.location.origin}${routes.campaigns.donationStatus(
+                campaign.slug,
+              )}?p_status=succeeded`,
+              errorUrl: `${window.location.origin}${routes.campaigns.donationStatus(
+                campaign.slug,
+              )}?p_status=failed`,
+            })
+
+            console.log('Session data received:', sessionData)
+
+            // Update context with session data
+            iris?.updatePaymentSessionData?.({
+              userhash: sessionData.userHash,
+              hookHash: sessionData.hookHash,
+            })
+
+            console.log('Updated payment session data')
+
+            // Update payment data with amount
+            const paymentData = {
+              sum: Number((values.finalAmount || 100) / 100),
+              description: `${campaign.title} - Donation`,
+              currency: iris.currency,
+              toIban: 'BG85IORT80947826532954',
+              merchant: 'PodkrepiBG',
+              useOnlySelectedBankHashes: 'bf935ea4814061d70902683c1565fa2c',
+            }
+
+            console.log('Setting payment data:', paymentData)
+
+            iris?.updatePaymentData?.(paymentData)
+
+            console.log('About to show payment element')
+            setSubmitPaymentLoading(false)
+            return
+          } catch (error) {
+            console.error('Payment session creation failed:', error)
+            setSubmitPaymentLoading(false)
+            setPaymentError({
+              type: 'invalid_request_error',
+              message: 'Failed to create payment session',
+            })
+            return
+          }
+        }
+
         if (values.payment === DonationFormPaymentMethod.BANK) {
           cancelSetupIntentMutation.mutate({ id: setupIntent.id })
           helpers.resetForm()
@@ -152,8 +271,6 @@ export function DonationFlowForm() {
         }
 
         if (!stripe || !elements || !setupIntent) {
-          // Stripe.js has not yet loaded.
-          // Form should be disabled but TS doesn't know that.
           setSubmitPaymentLoading(false)
           setPaymentError({
             type: 'invalid_request_error',
@@ -220,15 +337,13 @@ export function DonationFlowForm() {
           })
           return
         }
-
-        // Confirm the payment
       }}
       validateOnMount={false}
       validateOnChange={true}
       validateOnBlur={true}>
       {({ handleSubmit, values, errors, submitCount, isValid }) => (
         <Grid2 spacing={4} container justifyContent={'center'}>
-          <Grid2 size={{ sm: 12, md: 9 }} justifyContent={'center'}>
+          <Grid2 size={{ sm: 12, md: 9 }} justifyContent={'center'} sx={{ position: 'relative' }}>
             <Form onSubmit={handleSubmit} autoComplete="off">
               <ConfirmationDialog
                 isOpen={showCancelDialog}
@@ -331,8 +446,8 @@ export function DonationFlowForm() {
                     paymentError={paymentError}
                   />
                   <SubmitButton
-                    disabled={submitPaymentLoading || (submitCount > 0 && !isValid)}
-                    loading={submitPaymentLoading}
+                    disabled={submitPaymentLoading || isCompleting || (submitCount > 0 && !isValid)}
+                    loading={submitPaymentLoading || isCompleting}
                     label={t('action.submit')}
                     sx={{ maxWidth: 150 }}
                   />
@@ -351,6 +466,43 @@ export function DonationFlowForm() {
                 name={`donation-flow-${campaign.slug}`}
               />
             </Form>
+
+            {/* Payment element overlay with smooth bottom-to-top animation */}
+            <Box
+              data-payment-wrapper
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'flex-end', // Align to bottom
+                zIndex: 1000,
+                pointerEvents: showPaymentElement ? 'auto' : 'none',
+              }}>
+              <Box
+                sx={{
+                  maxHeight: showPaymentElement ? '100%' : '0px',
+                  overflow: 'hidden',
+                  transition: 'max-height 0.5s ease',
+                  backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                  borderRadius: 2,
+                  border: '1px solid #e0e0e0',
+                  backdropFilter: 'blur(4px)',
+                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+                  flex: 1,
+                }}>
+                <Box sx={{ p: 3, height: '100%', minHeight: '100%' }}>
+                  <PaymentDataElement
+                    onLoad={handleOnPaymentElementLoad}
+                    onSuccess={handleOnPaymentSuccess}
+                    onError={handleOnPaymentError}
+                  />
+                </Box>
+              </Box>
+            </Box>
           </Grid2>
         </Grid2>
       )}

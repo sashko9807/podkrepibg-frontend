@@ -4,11 +4,12 @@ import getConfig from 'next/config'
 import { makeUseAxios } from 'axios-hooks'
 
 const {
-  publicRuntimeConfig: { API_URL },
+  publicRuntimeConfig: { API_URL, APP_URL },
 } = getConfig()
 
 const cache = new LRU({ max: 10 })
 export const apiClient = Axios.create({ baseURL: `${API_URL}` })
+export const appClient = Axios.create({ baseURL: `${APP_URL}` })
 
 export const useAxios = makeUseAxios({
   axios: apiClient,
