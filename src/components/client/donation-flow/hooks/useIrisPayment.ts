@@ -30,7 +30,8 @@ export function useIrisPayment({
   const { data: { user: person } = { user: null } } = useCurrentPerson()
 
   const handleOnPaymentElementLoad = (data: CustomEvent) => {
-    console.log('Payment element loaded:', data.detail)
+    console.log('Payment element loaded successfully:', data.detail)
+    // Element is already shown, this confirms it loaded properly
     setShowPaymentElement(true)
   }
 
@@ -67,13 +68,14 @@ export function useIrisPayment({
       console.log('Completing payment with data:', completionData)
 
       // Call the complete payment API
-      await completePaymentMutation.mutateAsync(completionData)
+      const payment = await completePaymentMutation.mutateAsync(completionData)
+      console.log('Payment completion response:', payment)
 
       // Navigate to success page
       router.push(
-        `${routes.campaigns.donationStatus(
-          campaign.slug,
-        )}?p_status=succeeded&payment_method=irispay`,
+        `${window.location.origin}${routes.campaigns.donationStatus(campaign.slug)}?p_status=${
+          payment.status
+        }&payment_intent=${payment.id}`,
       )
     } catch (error) {
       console.error('Payment completion failed:', error)

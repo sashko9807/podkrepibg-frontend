@@ -4,6 +4,7 @@ import crypto from 'crypto'
 import { apiClient } from 'service/apiClient'
 import { serialize } from 'cookie'
 import { IrisHookHash } from 'components/client/iris-pay/IRISPayComponent'
+import { PaymentStatus } from 'gql/donations.enums'
 
 const JWT_SECRET = process.env.NEXTAUTH_SECRET!
 const BACKEND_SECRET = process.env.PG_PAYLOAD_SECRET!
@@ -70,7 +71,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     },
   })
 
-  if (backendRes.status !== 200) {
+  if (backendRes.status !== 201) {
     console.error(backendRes.data)
     return res.status(502).json({ error: 'Backend rejected payment' })
   }
@@ -87,5 +88,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }),
   )
 
-  return res.status(200).json({ success: true })
+  const status = mapStatusToPaymentStatus(payment.data.status)
+  return res.status(200).json({ id: paymentData.hookHash, status })
+}
+
+function mapStatusToPaymentStatus(status: string): PaymentStatus {
+  switch (status.toUpperCase()) {
+    case 'CONFIRMED':
+      return PaymentStatus.succeeded
+    case 'FAILED':
+      return PaymentStatus.declined
+    case 'WAITING':
+      return PaymentStatus.waiting
+    default:
+      return PaymentStatus.waiting
+  }
 }

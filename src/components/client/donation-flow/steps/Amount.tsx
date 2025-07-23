@@ -10,7 +10,7 @@ import { moneyPublic, toMoney } from 'common/util/money'
 import RadioButtonGroup from 'components/common/form/RadioButtonGroup'
 
 import { stripeFeeCalculator, stripeIncludeFeeCalculator } from '../helpers/stripe-fee-calculator'
-import { DonationFormData } from '../helpers/types'
+import { DonationFormData, DonationFormPaymentMethod } from '../helpers/types'
 import { useSession } from 'next-auth/react'
 import { ids } from '../common/DonationFormSections'
 import { DonationFormSectionErrorText } from '../common/DonationFormErrors'
@@ -77,6 +77,11 @@ export default function Amount({ disabled, sectionRef, error }: SelectDonationAm
 
     // Do not perform calculations if amount is not set
     if (amountChosen === 0) return
+
+    if (formik.values.payment === DonationFormPaymentMethod.IRISPAY) {
+      formik.setFieldValue('finalAmount', amountChosen)
+      return
+    }
 
     if (formik.values.cardIncludeFees) {
       formik.setFieldValue('amountWithoutFees', amountChosen)

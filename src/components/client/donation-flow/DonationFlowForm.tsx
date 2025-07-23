@@ -78,13 +78,18 @@ const generalValidation = {
     .nullable()
     .required() as yup.SchemaOf<DonationFormPaymentMethod>,
   billingName: yup.string().when('payment', {
-    is: 'card',
-    then: yup.string(),
+    is: (value: string) =>
+      value === DonationFormPaymentMethod.CARD || value === DonationFormPaymentMethod.IRISPAY,
+    then: yup.string().required('donation-flow:step.payment-method.field.card-data.errors.name'),
     otherwise: yup.string(),
   }),
   billingEmail: yup.string().when('payment', {
-    is: 'card',
-    then: yup.string(),
+    is: (value: string) =>
+      value === DonationFormPaymentMethod.CARD || value === DonationFormPaymentMethod.IRISPAY,
+    then: yup
+      .string()
+      .email('donation-flow:step.payment-method.field.card-data.errors.email')
+      .required('donation-flow:step.payment-method.field.card-data.errors.email'),
     otherwise: yup.string(),
   }),
   // selectedBankHashId: yup.string().when('payment', {
@@ -162,10 +167,15 @@ export function DonationFlowForm() {
 
   // Add some debugging to see what's happening
   useEffect(() => {
-    console.log('Payment element visibility:', showPaymentElement)
-    console.log('Iris context:', iris)
-    console.log('Payment session:', iris?.paymentSession)
-    console.log('Payment data:', iris?.paymentData)
+    console.log('Payment element visibility changed:', showPaymentElement)
+    if (showPaymentElement) {
+      console.log('Payment element is now visible. Context state:', {
+        hasPaymentSession: !!iris?.paymentSession,
+        hookHash: iris?.paymentSession?.hookHash,
+        userhash: iris?.paymentSession?.userhash,
+        hasPaymentData: !!iris?.paymentData,
+      })
+    }
   }, [showPaymentElement, iris?.paymentSession, iris?.paymentData])
 
   // Add scroll to top when payment element shows
@@ -198,8 +208,18 @@ export function DonationFlowForm() {
       onSubmit={async (values, helpers) => {
         setSubmitPaymentLoading(true)
 
+        if (!values.finalAmount) {
+          setSubmitPaymentLoading(false)
+          setPaymentError({
+            type: 'invalid_request_error',
+            message: t('step.summary.alerts.error'),
+          })
+          return
+        }
+
         if (values.payment === DonationFormPaymentMethod.IRISPAY) {
           try {
+            cancelSetupIntentMutation.mutate({ id: setupIntent.id })
             const name = values?.billingName?.split(' ') as string[]
             console.log('Creating payment session with:', {
               campaignId: campaign.id,
@@ -238,16 +258,19 @@ export function DonationFlowForm() {
               currency: iris.currency,
               toIban: 'BG85IORT80947826532954',
               merchant: 'PodkrepiBG',
-              useOnlySelectedBankHashes: 'bf935ea4814061d70902683c1565fa2c',
+              useOnlySelectedBankHashes: values.selectedBankHashId,
             }
 
             console.log('Setting payment data:', paymentData)
 
             iris?.updatePaymentData?.(paymentData)
 
-            console.log('About to show payment element')
+            console.log('Context updated, showing payment element immediately')
+
+            // Show payment element immediately - let the PaymentDataElement handle loading
+            setShowPaymentElement(true)
+
             setSubmitPaymentLoading(false)
-            return
           } catch (error) {
             console.error('Payment session creation failed:', error)
             setSubmitPaymentLoading(false)
@@ -257,6 +280,7 @@ export function DonationFlowForm() {
             })
             return
           }
+          return
         }
 
         if (values.payment === DonationFormPaymentMethod.BANK) {
@@ -271,15 +295,6 @@ export function DonationFlowForm() {
         }
 
         if (!stripe || !elements || !setupIntent) {
-          setSubmitPaymentLoading(false)
-          setPaymentError({
-            type: 'invalid_request_error',
-            message: t('step.summary.alerts.error'),
-          })
-          return
-        }
-
-        if (!values.finalAmount) {
           setSubmitPaymentLoading(false)
           setPaymentError({
             type: 'invalid_request_error',
@@ -481,6 +496,8 @@ export function DonationFlowForm() {
                 justifyContent: 'flex-end', // Align to bottom
                 zIndex: 1000,
                 pointerEvents: showPaymentElement ? 'auto' : 'none',
+                // Hide any potential lines/borders when not showing payment element
+                visibility: showPaymentElement ? 'visible' : 'hidden',
               }}>
               <Box
                 sx={{
@@ -489,9 +506,10 @@ export function DonationFlowForm() {
                   transition: 'max-height 0.5s ease',
                   backgroundColor: 'rgba(255, 255, 255, 0.98)',
                   borderRadius: 2,
-                  border: '1px solid #e0e0e0',
+                  // Remove border when payment element is not shown to prevent lines
+                  border: showPaymentElement ? '1px solid #e0e0e0' : 'none',
                   backdropFilter: 'blur(4px)',
-                  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+                  boxShadow: showPaymentElement ? '0 8px 32px rgba(0, 0, 0, 0.1)' : 'none',
                   flex: 1,
                 }}>
                 <Box sx={{ p: 3, height: '100%', minHeight: '100%' }}>

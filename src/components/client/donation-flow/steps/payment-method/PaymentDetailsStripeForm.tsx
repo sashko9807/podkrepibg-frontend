@@ -53,15 +53,6 @@ export default function PaymentDetailsStripeForm({
       display={'flex'}
       flexDirection={'column'}
       gap={2}>
-      <LinkAuthenticationElement
-        id="billingEmail"
-        onChange={(e) => formik.setFieldValue('billingEmail', e.value.email)}
-        options={{
-          defaultValues: {
-            email: formik.values.billingEmail ?? session?.user?.email ?? '',
-          },
-        }}
-      />
       <Box
         display={'flex'}
         flexDirection={'column'}
