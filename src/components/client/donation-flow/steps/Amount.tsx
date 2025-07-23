@@ -78,22 +78,32 @@ export default function Amount({ disabled, sectionRef, error }: SelectDonationAm
     // Do not perform calculations if amount is not set
     if (amountChosen === 0) return
 
-    if (formik.values.payment === DonationFormPaymentMethod.IRISPAY) {
+    // For non-card payment methods (IRISPAY, BANK), always use the chosen amount without fees
+    if (
+      formik.values.payment === DonationFormPaymentMethod.IRISPAY ||
+      formik.values.payment === DonationFormPaymentMethod.BANK
+    ) {
       formik.setFieldValue('finalAmount', amountChosen)
       return
     }
 
-    if (formik.values.cardIncludeFees) {
-      formik.setFieldValue('amountWithoutFees', amountChosen)
-      formik.setFieldValue(
-        'finalAmount',
-        stripeIncludeFeeCalculator(amountChosen, formik.values.cardRegion as CardRegion),
-      )
+    // For card payments, handle fee calculations
+    if (formik.values.payment === DonationFormPaymentMethod.CARD) {
+      if (formik.values.cardIncludeFees) {
+        formik.setFieldValue('amountWithoutFees', amountChosen)
+        formik.setFieldValue(
+          'finalAmount',
+          stripeIncludeFeeCalculator(amountChosen, formik.values.cardRegion as CardRegion),
+        )
+      } else {
+        formik.setFieldValue(
+          'amountWithoutFees',
+          amountChosen - stripeFeeCalculator(amountChosen, formik.values.cardRegion as CardRegion),
+        )
+        formik.setFieldValue('finalAmount', amountChosen)
+      }
     } else {
-      formik.setFieldValue(
-        'amountWithoutFees',
-        amountChosen - stripeFeeCalculator(amountChosen, formik.values.cardRegion as CardRegion),
-      )
+      // Default case when no payment method is selected yet
       formik.setFieldValue('finalAmount', amountChosen)
     }
   }, [
@@ -101,6 +111,7 @@ export default function Amount({ disabled, sectionRef, error }: SelectDonationAm
     formik.values.amountChosen,
     formik.values.cardIncludeFees,
     formik.values.cardRegion,
+    formik.values.payment,
   ])
 
   return (

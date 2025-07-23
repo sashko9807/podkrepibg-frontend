@@ -112,7 +112,9 @@
         "password": "Парола",
         "email": {
           "error": "Трябва да въведете валиден имейл."
-        }
+        },
+        "billing-email": "Имейл за фактура",
+        "billing-name": "Пълно име за фактура"
       },
       "alert": {
         "authenticate": {
