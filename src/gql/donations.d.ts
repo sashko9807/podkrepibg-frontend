@@ -36,14 +36,17 @@ export type UpdatePaymentIntentInput = {
   payload: Stripe.PaymentIntentUpdateParams
 }
 
-export type CancelSetupIntentInput = {
-  id: string
+export type CreateDonationPaymentInput = {
+  confirmationTokenId: string
+  campaignId: string
+  // In the smallest currency unit (cents)
+  amount: number
+  type: DonationType
+  isAnonymous: boolean
+  personId?: string
 }
 
-export type UpdateSetupIntentInput = {
-  id: string
-  payload: Stripe.SetupIntentUpdateParams
-}
+export type DonationPaymentResponse = Pick<Stripe.PaymentIntent, 'id' | 'status' | 'client_secret'>
 
 export type CancelPaymentIntentInput = {
   id: string

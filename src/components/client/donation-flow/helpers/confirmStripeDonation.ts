@@ -1,48 +1,58 @@
 import { DonationFormData, DonationFormPaymentStatus, PaymentMode } from './types'
-import { createIntentFromSetup } from 'service/donation'
+import { createDonationPayment } from 'service/donation'
 import { CampaignResponse } from 'gql/campaigns'
-import { routes } from 'common/routes'
+import { CreateDonationPaymentInput, DonationPaymentResponse } from 'gql/donations'
 import { Stripe, StripeElements } from '@stripe/stripe-js'
-import type StripeJS from 'stripe'
 import { Session } from 'next-auth'
+import { stripeElementsOptions } from '../contexts/StripeElementsProvider'
 
 export async function confirmStripePayment(
-  setupIntent: StripeJS.SetupIntent,
   elements: StripeElements,
   stripe: Stripe,
   campaign: CampaignResponse,
   values: DonationFormData,
+  donation: Pick<CreateDonationPaymentInput, 'type' | 'personId'>,
   session: Session | null,
-): Promise<StripeJS.PaymentIntent> {
-  if (setupIntent.status !== DonationFormPaymentStatus.SUCCEEDED) {
-    const { error: intentError } = await stripe.confirmSetup({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}${routes.campaigns.donationStatus(campaign.slug)}`,
-        payment_method_data: {
-          billing_details: { name: values.billingName, email: values.billingEmail },
-        },
+): Promise<Pick<DonationPaymentResponse, 'id' | 'status'>> {
+  // Make sure the wallet sheets (Apple Pay, Google Pay) show the final amount
+  elements.update(stripeElementsOptions(values))
+
+  // Validate the payment form before creating anything in Stripe
+  const { error: submitError } = await elements.submit()
+  if (submitError) throw submitError
+
+  const { error: tokenError, confirmationToken } = await stripe.createConfirmationToken({
+    elements,
+    params: {
+      payment_method_data: {
+        billing_details: { name: values.billingName, email: values.billingEmail },
       },
-      redirect: 'if_required',
+    },
+  })
+  if (tokenError) throw tokenError
+
+  // The API charges the amount from this request, validated against the campaign
+  const { data: payment } = await createDonationPayment(
+    values.mode as PaymentMode,
+    {
+      confirmationTokenId: confirmationToken.id,
+      campaignId: campaign.id,
+      amount: Math.round(values.finalAmount as number),
+      type: donation.type,
+      isAnonymous: values.isAnonymous,
+      personId: donation.personId,
+    },
+    session,
+  )
+
+  if (payment.status === DonationFormPaymentStatus.REQUIRES_ACTION) {
+    // e.g. 3D Secure
+    const { error: actionError, paymentIntent } = await stripe.handleNextAction({
+      clientSecret: payment.client_secret as string,
     })
-    if (intentError) {
-      throw intentError
-    }
+    if (actionError) throw actionError
+    if (!paymentIntent) throw new Error(`Payment ${payment.id} could not be completed`)
+    return { id: paymentIntent.id, status: paymentIntent.status }
   }
-  const payment = await createIntentFromSetup(setupIntent.id, values.mode as PaymentMode, session)
-
-  if (payment.data.status === DonationFormPaymentStatus.REQUIRES_ACTION) {
-    const { error: confirmPaymentError } = await stripe.confirmCardPayment(
-      payment.data.client_secret as string,
-    )
-    if (confirmPaymentError) throw confirmPaymentError
-    //Retrieve latest paymentintent status
-    const { paymentIntent, error: retrievePaymentError } = await stripe.retrievePaymentIntent(
-      payment.data.client_secret as string,
-    )
-    if (!paymentIntent || retrievePaymentError) throw retrievePaymentError
-
-    return paymentIntent as StripeJS.PaymentIntent
-  }
-  return payment.data
+  return payment
 }

@@ -2,9 +2,7 @@ import { GetServerSideProps, GetServerSidePropsContext } from 'next'
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations'
 import { QueryClient, dehydrate } from '@tanstack/react-query'
 import Stripe from 'stripe'
-import { AxiosResponse } from 'axios'
 
-import { apiClient } from 'service/apiClient'
 import { endpoints } from 'service/apiEndpoints'
 import { queryFnFactory } from 'service/restRequests'
 import { CampaignResponse } from 'gql/campaigns'
@@ -22,18 +20,9 @@ export const getServerSideProps: GetServerSideProps = async (ctx: GetServerSideP
     queryFnFactory<Stripe.Price[]>(),
   )
 
-  //Generate idempotencyKey to prevent duplicate creation of resources in stripe
-
-  //create and prefetch the payment intent
-  const { data: setupIntent } = await apiClient.post<
-    Stripe.SetupIntentCreateParams,
-    AxiosResponse<Stripe.SetupIntentCreateParams>
-  >(endpoints.donation.createSetupIntent.url)
-
   return {
     props: {
       slug,
-      setupIntent,
       dehydratedState: dehydrate(client),
       ...(await serverSideTranslations(ctx.locale ?? 'bg', [
         'common',

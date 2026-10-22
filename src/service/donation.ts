@@ -1,5 +1,5 @@
 import Stripe from 'stripe'
-import { AxiosError, AxiosResponse } from 'axios'
+import { AxiosResponse } from 'axios'
 import { useSession } from 'next-auth/react'
 
 import {
@@ -10,9 +10,9 @@ import {
   DonationResponse,
   StripeRefundResponse,
   SubscriptionPaymentInput,
-  UpdateSetupIntentInput,
+  CreateDonationPaymentInput,
+  DonationPaymentResponse,
   UserDonationInput,
-  CancelSetupIntentInput,
 } from 'gql/donations'
 import { apiClient } from 'service/apiClient'
 import { endpoints } from 'service/apiEndpoints'
@@ -22,7 +22,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { FilterData } from 'gql/types'
 import { PaymentMode } from 'components/client/donation-flow/helpers/types'
 import { Session } from 'next-auth'
-import { SetupIntent } from '@stripe/stripe-js'
 import { AlertStore } from 'stores/AlertStore'
 import { useTranslation } from 'next-i18next'
 
@@ -46,29 +45,6 @@ export function useCreatePaymentIntent() {
   })
 }
 
-export function useUpdateSetupIntent() {
-  //Create payment intent useing the react-query mutation
-  const { data: session } = useSession()
-  return useMutation({
-    mutationFn: async ({ id, payload }: UpdateSetupIntentInput) => {
-      return await apiClient.post<
-        Stripe.SetupIntentUpdateParams,
-        AxiosResponse<Stripe.SetupIntent>
-      >(endpoints.donation.updateSetupIntent(id).url, payload, authConfig(session?.accessToken))
-    },
-  })
-}
-
-export function useCancelSetupIntent() {
-  return useMutation<AxiosResponse<SetupIntent>, AxiosError, CancelSetupIntentInput>({
-    mutationFn: async ({ id }) => {
-      return await apiClient.patch<CancelSetupIntentInput, AxiosResponse<SetupIntent>>(
-        endpoints.donation.cancelSetupIntent(id).url,
-      )
-    },
-  })
-}
-
 export function useCreateSubscriptionPayment() {
   const { data: session } = useSession()
   return useMutation(async (data: SubscriptionPaymentInput) => {
@@ -80,16 +56,16 @@ export function useCreateSubscriptionPayment() {
   })
 }
 
-export async function createIntentFromSetup(
-  setupIntentId: string,
+export async function createDonationPayment(
   mode: PaymentMode,
+  data: CreateDonationPaymentInput,
   session: Session | null,
-): Promise<AxiosResponse<Stripe.PaymentIntent>> {
-  return await apiClient.post<PaymentMode, AxiosResponse<Stripe.PaymentIntent>, AxiosError<Error>>(
+): Promise<AxiosResponse<DonationPaymentResponse>> {
+  return await apiClient.post<CreateDonationPaymentInput, AxiosResponse<DonationPaymentResponse>>(
     mode === 'one-time'
-      ? endpoints.donation.createPaymentIntentFromSetup(setupIntentId).url
-      : endpoints.donation.createSubscriptionFromSetup(setupIntentId).url,
-    undefined,
+      ? endpoints.donation.createDonationPaymentIntent.url
+      : endpoints.donation.createDonationSubscription.url,
+    data,
     authConfig(session?.accessToken),
   )
 }

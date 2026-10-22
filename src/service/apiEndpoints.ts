@@ -153,27 +153,11 @@ export const endpoints = {
     createCheckoutSession: <Endpoint>{ url: '/stripe/create-checkout-session', method: 'POST' },
     createSubscriptionPayment: <Endpoint>{ url: '/stripe/create-subscription', method: 'POST' },
     createPaymentIntent: <Endpoint>{ url: '/stripe/payment-intent', method: 'POST' },
-    createSetupIntent: <Endpoint>{ url: '/stripe/setup-intent', method: 'POST' },
-    createPaymentIntentFromSetup: (id: string) =>
-      <Endpoint>{
-        url: `/stripe/setup-intent/${id}/payment-intent`,
-        method: 'POST',
-      },
-    createSubscriptionFromSetup: (id: string) =>
-      <Endpoint>{
-        url: `/stripe/setup-intent/${id}/subscription`,
-        method: 'POST',
-      },
-    updateSetupIntent: (id: string) =>
-      <Endpoint>{
-        url: `/stripe/setup-intent/${id}`,
-        method: 'POST',
-      },
-    cancelSetupIntent: (id: string) =>
-      <Endpoint>{
-        url: `/stripe/setup-intent/${id}/cancel`,
-        method: 'POST',
-      },
+    createDonationPaymentIntent: <Endpoint>{
+      url: '/stripe/donation/payment-intent',
+      method: 'POST',
+    },
+    createDonationSubscription: <Endpoint>{ url: '/stripe/donation/subscription', method: 'POST' },
     createBankDonation: <Endpoint>{ url: '/donation/create-bank-payment', method: 'POST' },
     synchronizeWithPayment: (id: string) =>
       <Endpoint>{ url: `/donation/${id}/sync-with-payment`, method: 'PATCH' },

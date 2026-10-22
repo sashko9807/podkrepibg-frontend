@@ -1,4 +1,3 @@
-import Stripe from 'stripe'
 import { useViewCampaign } from 'common/hooks/campaigns'
 
 import { DonationFlowForm } from './DonationFlowForm'
@@ -8,19 +7,13 @@ import DonationFlowLayout from './DonationFlowLayout'
 import { CampaignResponse } from 'gql/campaigns'
 import { IrisElements } from '@podkrepi-bg/react-irispay'
 
-export default function DonationFlowPage({
-  slug,
-  setupIntent,
-}: {
-  slug: string
-  setupIntent: Stripe.SetupIntent
-}) {
+export default function DonationFlowPage({ slug }: { slug: string }) {
   const { data } = useViewCampaign(slug)
   //This query needs to be prefetched in the pages folder
   //otherwise on the first render the data will be undefined
   const campaign = data?.campaign as CampaignResponse
   return (
-    <DonationFlowProvider campaign={campaign} setupIntent={setupIntent}>
+    <DonationFlowProvider campaign={campaign}>
       <IrisElements
         backend={
           process.env.NEXT_PUBLIC_IRIS_BACKEND === 'production' ? 'production' : 'development'

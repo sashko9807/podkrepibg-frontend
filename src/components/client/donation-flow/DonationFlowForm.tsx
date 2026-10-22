@@ -16,7 +16,6 @@ import CheckboxField from 'components/common/form/CheckboxField'
 import AcceptPrivacyPolicyField from 'components/common/form/AcceptPrivacyPolicyField'
 import ConfirmationDialog from 'components/common/ConfirmationDialog'
 import SubmitButton from 'components/common/form/SubmitButton'
-import { useCancelSetupIntent, useUpdateSetupIntent } from 'service/donation'
 
 import StepSplitter from './common/StepSplitter'
 import PaymentMethod from './steps/payment-method/PaymentMethod'
@@ -28,6 +27,7 @@ import {
   registerFormValidation,
 } from './steps/authentication/InlineRegisterForm'
 import { useDonationFlow } from './contexts/DonationFlowProvider'
+import { StripeElementsSync } from './contexts/StripeElementsProvider'
 import AlertsColumn from './alerts/AlertsColumn'
 import PaymentSummaryAlert from './alerts/PaymentSummaryAlert'
 import {
@@ -119,13 +119,11 @@ export const validationSchema = yup
 export function DonationFlowForm() {
   const formikRef = useRef<FormikProps<DonationFormData> | null>(null)
   const { t } = useTranslation('donation-flow')
-  const { campaign, setupIntent, paymentError, setPaymentError } = useDonationFlow()
+  const { campaign, paymentError, setPaymentError } = useDonationFlow()
   const stripe = useStripe()
   const iris = useIrisElements()
   const elements = useElements()
   const router = useRouter()
-  const updateSetupIntentMutation = useUpdateSetupIntent()
-  const cancelSetupIntentMutation = useCancelSetupIntent()
   const { startSession, createSession } = usePaymentSession()
   const paymentMethodSectionRef = React.useRef<HTMLDivElement>(null)
   const authenticationSectionRef = React.useRef<HTMLDivElement>(null)
@@ -221,7 +219,6 @@ export function DonationFlowForm() {
 
         if (values.payment === DonationFormPaymentMethod.IRISPAY) {
           try {
-            cancelSetupIntentMutation.mutate({ id: setupIntent.id })
             const name = values?.billingName?.split(' ') as string[]
 
             const sessionData = await createSession({
@@ -272,7 +269,6 @@ export function DonationFlowForm() {
         }
 
         if (values.payment === DonationFormPaymentMethod.BANK) {
-          cancelSetupIntentMutation.mutate({ id: setupIntent.id })
           helpers.resetForm()
           return router.push(
             `${routes.campaigns.donationStatus(campaign.slug)}?${new URLSearchParams({
@@ -282,7 +278,7 @@ export function DonationFlowForm() {
           )
         }
 
-        if (!stripe || !elements || !setupIntent) {
+        if (!stripe || !elements) {
           setSubmitPaymentLoading(false)
           setPaymentError({
             type: 'invalid_request_error',
@@ -300,31 +296,18 @@ export function DonationFlowForm() {
           return
         }
 
-        // Update the setup intent with the latest calculated amount
         try {
-          const updatedIntent = await updateSetupIntentMutation.mutateAsync({
-            id: setupIntent.id,
-            payload: {
-              metadata: {
-                type: person?.company ? DonationType.corporate : DonationType.donation,
-                campaignId: campaign.id,
-                amount: values.finalAmount,
-                currency: campaign.currency,
-                isAnonymous: values.isAnonymous.toString(),
-                return_url: `${window.location.origin}/${routes.campaigns.donationStatus(
-                  campaign.slug,
-                )}`,
-                personId: session?.user && person?.id ? person.id : null,
-              },
-            },
-          })
-          // Confirm the payment
+          // Each attempt creates a new ConfirmationToken from the payment form, so a retry
+          // with a different card always uses the card that was entered last
           const payment = await confirmStripePayment(
-            updatedIntent.data,
             elements,
             stripe,
             campaign,
             values,
+            {
+              type: person?.company ? DonationType.corporate : DonationType.donation,
+              personId: session?.user && person?.id ? person.id : undefined,
+            },
             session,
           )
           router.push(
@@ -348,6 +331,7 @@ export function DonationFlowForm() {
         <Grid2 spacing={4} container justifyContent={'center'}>
           <Grid2 size={{ sm: 12, md: 9 }} justifyContent={'center'} sx={{ position: 'relative' }}>
             <Form onSubmit={handleSubmit} autoComplete="off">
+              <StripeElementsSync />
               <ConfirmationDialog
                 isOpen={showCancelDialog}
                 handleCancel={() => {
@@ -358,7 +342,6 @@ export function DonationFlowForm() {
                 confirmButtonLabel={t('cancel-dialog.btn-continue')}
                 cancelButtonLabel={t('cancel-dialog.btn-cancel')}
                 handleConfirm={() => {
-                  cancelSetupIntentMutation.mutate({ id: setupIntent.id })
                   router.push(routes.campaigns.viewCampaignBySlug(campaign.slug))
                 }}
               />
